@@ -2,6 +2,16 @@
 pragma solidity ^0.8.26;
 
 contract DEFI{
+
+    // A simple mapping for information of each user
+    mapping(address => uint) public collateralA;
+    mapping(address => uint) public collateralB;
+    mapping(address => uint) public debtA;
+    mapping(address => uint) public debtB;
+
+    // A constructor for when the smart contract is deployed, should store storage for tokens
+    constructor(){}
+
     // For liquidity providers 
     function addLiquidity()
     function removeLiquidity()
