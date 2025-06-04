@@ -41,6 +41,10 @@ contract DeFiCore {
         LendingCore(lendingCore).borrowTokenA(collateralAmount, borrowAmount, poolAddress);
     }
 
+    function borrowTokenB(uint256 collateralAmount, uint256 borrowAmount, address poolAddress) external {
+        LendingCore(lendingCore).borrowTokenB(collateralAmount, borrowAmount, poolAddress);
+    }
+
     function repay(uint256 amount, address poolAddress) external {
         LendingCore(lendingCore).repay(amount, poolAddress);
     }
@@ -64,6 +68,11 @@ contract DeFiCore {
     function withdrawLentTokenB(uint256 amount, address poolAddress) external {
         LendingCore(lendingCore).withdrawLentTokenB(amount, poolAddress);
     }
+
+    function getHealthFactor(address borrower, address poolAddress) external view returns (uint256) {
+        return LendingCore(lendingCore).getHealthFactor(borrower, poolAddress);
+    }
+
 
     function swap(address poolAddress, address tokenIn, uint256 amountIn) external {
         Pool(poolAddress).swap(tokenIn, amountIn);
