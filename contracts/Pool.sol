@@ -34,7 +34,7 @@ contract Pool {
     }
 
 
-    function swap(address tokenIn, uint256 amountIn) external {
+    function swap(address tokenIn, uint256 amountIn, uint256 minAmountOut) external {
         require(tokenIn == tokenA || tokenIn == tokenB, "Invalid tokenIn");
         address tokenOut = tokenIn == tokenA ? tokenB : tokenA;
 
@@ -45,6 +45,7 @@ contract Pool {
         uint256 amountOut = (liquidityOut * amountInWithFee) / (liquidityIn + amountInWithFee);
 
         require(amountOut > 0, "Insufficient output");
+        require(amountOut >= minAmountOut, "Slippage exceeded");
 
         IERC20(tokenIn).transferFrom(msg.sender, address(this), amountIn);
         IERC20(tokenOut).transfer(msg.sender, amountOut);
@@ -52,12 +53,12 @@ contract Pool {
         if (tokenIn == tokenA) {
             liquidityA += amountIn;
             liquidityB -= amountOut;
-        }
-        else {
+        } else {
             liquidityB += amountIn;
             liquidityA -= amountOut;
         }
     }
+
 
     function addLiquidity(uint256 amountA, uint256 amountB) external {
         require( liquidityA * amountB == liquidityB * amountA,"Deposit ratio mismatch");
