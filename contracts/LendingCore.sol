@@ -5,8 +5,7 @@ import "./Pool.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract LendingCore {
-
-    enum LoanType { TokenA, TokenB }
+    enum LoanType { Token0, Token1 }
 
     struct Loan {
         uint256 collateralAmount;
@@ -14,19 +13,21 @@ contract LendingCore {
         LoanType loanType;
     }
 
-    mapping(address => Loan) public loans;
-    mapping(address => uint256) public tokenAStakes;
-    mapping(address => uint256) public tokenBStakes;
-    mapping(address => uint256) public tokenAWithdrawnInterest;
-    mapping(address => uint256) public tokenBWithdrawnInterest;
+    // ======= Per-POOL Loan, Stake, and Interest Tracking =======
 
-    uint256 public totalInterestTokenA;
-    uint256 public totalInterestTokenB;
+    mapping(address => mapping(address => Loan)) public loans; // user => pool => loan
+    mapping(address => mapping(address => uint256)) public stakes0;
+    mapping(address => mapping(address => uint256)) public stakes1;
+    mapping(address => mapping(address => uint256)) public withdrawnInterest0;
+    mapping(address => mapping(address => uint256)) public withdrawnInterest1;
 
-    uint256 public totalTokenAStaked;
-    uint256 public totalTokenBStaked;
+    mapping(address => uint256) public totalInterest0;
+    mapping(address => uint256) public totalInterest1;
+    mapping(address => uint256) public totalStaked0;
+    mapping(address => uint256) public totalStaked1;
 
-    uint256 public constant INTEREST_RATE_NUMERATOR = 500; // 5% interest
+    // ======= Constants =======
+    uint256 public constant INTEREST_RATE_NUMERATOR = 500; // 5%
     uint256 public constant INTEREST_RATE_DENOMINATOR = 10000;
 
     uint256 public constant COLLATERAL_RATIO_NUMERATOR = 15000; // 150%
@@ -35,200 +36,182 @@ contract LendingCore {
     uint256 public constant LIQUIDATOR_REWARD_NUMERATOR = 9500; // 95%
     uint256 public constant LIQUIDATOR_REWARD_DENOMINATOR = 10000;
 
-    function borrowTokenA(uint256 collateralAmount, uint256 borrowAmount, address poolAddress) external {
-        require(loans[msg.sender].borrowedAmount == 0, "Loan already active");
+    // ======= Borrowing =======
+
+    function borrowToken0(uint256 collateralAmount, uint256 borrowAmount, address poolAddress) external {
+        require(loans[msg.sender][poolAddress].borrowedAmount == 0, "Loan already active");
 
         Pool pool = Pool(poolAddress);
-        address tokenA = pool.tokenA();
-        address tokenB = pool.tokenB();
-        uint256 liquidityA = pool.liquidityA();
-        uint256 liquidityB = pool.liquidityB();
+        address token0 = pool.token0();
+        address token1 = pool.token1();
+        uint256 liquidity0 = pool.liquidity0();
+        uint256 liquidity1 = pool.liquidity1();
 
-        uint256 collateralValueInA = (liquidityA * collateralAmount) / liquidityB;
+        uint256 collateralValueIn0 = (liquidity0 * collateralAmount) / liquidity1;
+        require(collateralValueIn0 * 100 >= borrowAmount * 150, "Insufficient collateral");
 
-        require(collateralValueInA * 100 >= borrowAmount * 150,"Insufficient collateral: min 150% required");
-
-        IERC20(tokenB).transferFrom(msg.sender, address(this), collateralAmount);
-        IERC20(tokenA).transfer(msg.sender, borrowAmount);
+        IERC20(token1).transferFrom(msg.sender, address(this), collateralAmount);
+        IERC20(token0).transfer(msg.sender, borrowAmount);
 
         uint256 borrowWithInterest = borrowAmount + (borrowAmount * INTEREST_RATE_NUMERATOR) / INTEREST_RATE_DENOMINATOR;
 
-        loans[msg.sender] = Loan({
-            collateralAmount: collateralAmount,
-            borrowedAmount: borrowWithInterest,
-            loanType: LoanType.TokenA
-        });
+        loans[msg.sender][poolAddress] = Loan(collateralAmount, borrowWithInterest, LoanType.Token0);
     }
 
-    function borrowTokenB(uint256 collateralAmount, uint256 borrowAmount, address poolAddress) external {
-        require(loans[msg.sender].borrowedAmount == 0, "Loan already active");
+    function borrowToken1(uint256 collateralAmount, uint256 borrowAmount, address poolAddress) external {
+        require(loans[msg.sender][poolAddress].borrowedAmount == 0, "Loan already active");
 
         Pool pool = Pool(poolAddress);
-        address tokenA = pool.tokenA();
-        address tokenB = pool.tokenB();
-        uint256 liquidityA = pool.liquidityA();
-        uint256 liquidityB = pool.liquidityB();
+        address token0 = pool.token0();
+        address token1 = pool.token1();
+        uint256 liquidity0 = pool.liquidity0();
+        uint256 liquidity1 = pool.liquidity1();
 
-        uint256 collateralValueInB = (liquidityB * collateralAmount) / liquidityA;
+        uint256 collateralValueIn1 = (liquidity1 * collateralAmount) / liquidity0;
+        require(collateralValueIn1 * 100 >= borrowAmount * 150, "Insufficient collateral");
 
-        require(collateralValueInB * 100 >= borrowAmount * 150, "Insufficient collateral: min 150% required");
-
-        IERC20(tokenA).transferFrom(msg.sender, address(this), collateralAmount);
-        IERC20(tokenB).transfer(msg.sender, borrowAmount);
+        IERC20(token0).transferFrom(msg.sender, address(this), collateralAmount);
+        IERC20(token1).transfer(msg.sender, borrowAmount);
 
         uint256 borrowWithInterest = borrowAmount + (borrowAmount * INTEREST_RATE_NUMERATOR) / INTEREST_RATE_DENOMINATOR;
 
-        loans[msg.sender] = Loan({
-            collateralAmount: collateralAmount,
-            borrowedAmount: borrowWithInterest,
-            loanType: LoanType.TokenB
-        });
+        loans[msg.sender][poolAddress] = Loan(collateralAmount, borrowWithInterest, LoanType.Token1);
     }
+
+    // ======= Repayment =======
 
     function repay(uint256 amount, address poolAddress) external {
-        Loan storage loan = loans[msg.sender];
+        Loan storage loan = loans[msg.sender][poolAddress];
         require(loan.borrowedAmount > 0, "No active loan");
 
         Pool pool = Pool(poolAddress);
-        address token = loan.loanType == LoanType.TokenA ? pool.tokenA() : pool.tokenB();
+        address token = loan.loanType == LoanType.Token0 ? pool.token0() : pool.token1();
 
         require(amount > 0 && amount <= loan.borrowedAmount, "Invalid repay amount");
-
         IERC20(token).transferFrom(msg.sender, address(this), amount);
 
-        uint256 remainingDebtBefore = loan.borrowedAmount;
+        uint256 previousDebt = loan.borrowedAmount;
         loan.borrowedAmount -= amount;
 
         if (loan.borrowedAmount == 0) {
-            address collateralToken = loan.loanType == LoanType.TokenA ? pool.tokenB() : pool.tokenA();
+            address collateralToken = loan.loanType == LoanType.Token0 ? pool.token1() : pool.token0();
             IERC20(collateralToken).transfer(msg.sender, loan.collateralAmount);
 
-            uint256 interestPaid = amount > remainingDebtBefore ? amount - remainingDebtBefore : 0;
+            uint256 interestPaid = amount > previousDebt ? amount - previousDebt : 0;
 
-            if (loan.loanType == LoanType.TokenA) {
-                totalInterestTokenA += interestPaid;
+            if (loan.loanType == LoanType.Token0) {
+                totalInterest0[poolAddress] += interestPaid;
             } else {
-                totalInterestTokenB += interestPaid;
+                totalInterest1[poolAddress] += interestPaid;
             }
 
-            delete loans[msg.sender];
+            delete loans[msg.sender][poolAddress];
         }
     }
 
-    function liquidate(address borrower, address poolAddress) external {
+    // ======= Liquidation =======
 
-        Loan memory loan = loans[borrower];
+    function liquidate(address borrower, address poolAddress) external {
+        Loan memory loan = loans[borrower][poolAddress];
         require(loan.borrowedAmount > 0, "No active loan");
 
         Pool pool = Pool(poolAddress);
+        uint256 liquidity0 = pool.liquidity0();
+        uint256 liquidity1 = pool.liquidity1();
 
-        uint256 liquidityA = pool.liquidityA();
-        uint256 liquidityB = pool.liquidityB();
+        uint256 collateralValue = loan.loanType == LoanType.Token0
+            ? (liquidity0 * loan.collateralAmount) / liquidity1
+            : (liquidity1 * loan.collateralAmount) / liquidity0;
 
-        uint256 collateralValue;
+        uint256 healthFactor = (collateralValue * 1e18 * COLLATERAL_RATIO_DENOMINATOR) /
+                               (loan.borrowedAmount * COLLATERAL_RATIO_NUMERATOR);
 
-        if (loan.loanType == LoanType.TokenA) {
-            collateralValue = (liquidityA * loan.collateralAmount) / liquidityB;
-        } 
-        else {
-            collateralValue = (liquidityB * loan.collateralAmount) / liquidityA;
-        }
-        
-        uint256 healthFactor = (collateralValue * 1e18 * COLLATERAL_RATIO_DENOMINATOR) / (loan.borrowedAmount * COLLATERAL_RATIO_NUMERATOR);
         require(healthFactor < 1e18, "Loan is still healthy");
 
-        address collateralToken = loan.loanType == LoanType.TokenA ? pool.tokenB(): pool.tokenA();
-
+        address collateralToken = loan.loanType == LoanType.Token0 ? pool.token1() : pool.token0();
         uint256 reward = (loan.collateralAmount * LIQUIDATOR_REWARD_NUMERATOR) / LIQUIDATOR_REWARD_DENOMINATOR;
+
         IERC20(collateralToken).transfer(msg.sender, reward);
-
-        delete loans[borrower];
+        delete loans[borrower][poolAddress];
     }
 
-    function lendTokenA(uint256 amount, address poolAddress) external {
+    // ======= Lending / Interest =======
+
+    function lendToken0(uint256 amount, address poolAddress) external {
         require(amount > 0, "Cannot lend 0");
+        address token0 = Pool(poolAddress).token0();
+        IERC20(token0).transferFrom(msg.sender, address(this), amount);
 
-        address tokenA = Pool(poolAddress).tokenA();
-        IERC20(tokenA).transferFrom(msg.sender, address(this), amount);
-
-        tokenAStakes[msg.sender] += amount;
-        totalTokenAStaked += amount;
+        stakes0[msg.sender][poolAddress] += amount;
+        totalStaked0[poolAddress] += amount;
     }
 
-    function withdrawLentTokenA(uint256 amount, address poolAddress) external {
+    function withdrawLentToken0(uint256 amount, address poolAddress) external {
         require(amount > 0, "Cannot withdraw 0");
-        require(tokenAStakes[msg.sender] >= amount, "Not enough lent balance");
+        require(stakes0[msg.sender][poolAddress] >= amount, "Insufficient balance");
 
-        address tokenA = Pool(poolAddress).tokenA();
+        address token0 = Pool(poolAddress).token0();
 
-        // Calculate interest share
-        uint256 totalShare = totalTokenAStaked;
-        uint256 userShare = tokenAStakes[msg.sender];
-        uint256 totalInterest = totalInterestTokenA;
-
-        // Calculate how much interest user is owed overall
-        uint256 earnedInterest = (userShare * totalInterest) / totalShare;
-
-        // Subtract already withdrawn
-        uint256 withdrawableInterest = earnedInterest - tokenAWithdrawnInterest[msg.sender];
-
-        // Update balances
-        tokenAStakes[msg.sender] -= amount;
-        totalTokenAStaked -= amount;
-        tokenAWithdrawnInterest[msg.sender] += withdrawableInterest;
-
-        // Transfer both principal and interest
-        uint256 totalPayout = amount + withdrawableInterest;
-        IERC20(tokenA).transfer(msg.sender, totalPayout);
-    }
-
-    function lendTokenB(uint256 amount, address poolAddress) external {
-        require(amount > 0, "Cannot lend 0");
-
-        address tokenB = Pool(poolAddress).tokenB();
-        IERC20(tokenB).transferFrom(msg.sender, address(this), amount);
-
-        tokenBStakes[msg.sender] += amount;
-        totalTokenBStaked += amount;
-    }
-
-    function withdrawLentTokenB(uint256 amount, address poolAddress) external {
-        require(amount > 0, "Cannot withdraw 0");
-        require(tokenBStakes[msg.sender] >= amount, "Not enough lent balance");
-
-        address tokenB = Pool(poolAddress).tokenB();
-
-        uint256 totalShare = totalTokenBStaked;
-        uint256 userShare = tokenBStakes[msg.sender];
-        uint256 totalInterest = totalInterestTokenB;
+        uint256 totalShare = totalStaked0[poolAddress];
+        uint256 userShare = stakes0[msg.sender][poolAddress];
+        uint256 totalInterest = totalInterest0[poolAddress];
 
         uint256 earnedInterest = (userShare * totalInterest) / totalShare;
-        uint256 withdrawableInterest = earnedInterest - tokenBWithdrawnInterest[msg.sender];
+        uint256 withdrawableInterest = earnedInterest - withdrawnInterest0[msg.sender][poolAddress];
 
-        tokenBStakes[msg.sender] -= amount;
-        totalTokenBStaked -= amount;
-        tokenBWithdrawnInterest[msg.sender] += withdrawableInterest;
+        stakes0[msg.sender][poolAddress] -= amount;
+        totalStaked0[poolAddress] -= amount;
+        withdrawnInterest0[msg.sender][poolAddress] += withdrawableInterest;
 
         uint256 totalPayout = amount + withdrawableInterest;
-        IERC20(tokenB).transfer(msg.sender, totalPayout);
+        IERC20(token0).transfer(msg.sender, totalPayout);
     }
+
+    function lendToken1(uint256 amount, address poolAddress) external {
+        require(amount > 0, "Cannot lend 0");
+        address token1 = Pool(poolAddress).token1();
+        IERC20(token1).transferFrom(msg.sender, address(this), amount);
+
+        stakes1[msg.sender][poolAddress] += amount;
+        totalStaked1[poolAddress] += amount;
+    }
+
+    function withdrawLentToken1(uint256 amount, address poolAddress) external {
+        require(amount > 0, "Cannot withdraw 0");
+        require(stakes1[msg.sender][poolAddress] >= amount, "Insufficient balance");
+
+        address token1 = Pool(poolAddress).token1();
+
+        uint256 totalShare = totalStaked1[poolAddress];
+        uint256 userShare = stakes1[msg.sender][poolAddress];
+        uint256 totalInterest = totalInterest1[poolAddress];
+
+        uint256 earnedInterest = (userShare * totalInterest) / totalShare;
+        uint256 withdrawableInterest = earnedInterest - withdrawnInterest1[msg.sender][poolAddress];
+
+        stakes1[msg.sender][poolAddress] -= amount;
+        totalStaked1[poolAddress] -= amount;
+        withdrawnInterest1[msg.sender][poolAddress] += withdrawableInterest;
+
+        uint256 totalPayout = amount + withdrawableInterest;
+        IERC20(token1).transfer(msg.sender, totalPayout);
+    }
+
+    // ======= Health Factor =======
 
     function getHealthFactor(address borrower, address poolAddress) external view returns (uint256) {
-        Loan memory loan = loans[borrower];
+        Loan memory loan = loans[borrower][poolAddress];
         if (loan.borrowedAmount == 0) return type(uint256).max;
 
         Pool pool = Pool(poolAddress);
-        uint256 liquidityA = pool.liquidityA();
-        uint256 liquidityB = pool.liquidityB();
+        uint256 liquidity0 = pool.liquidity0();
+        uint256 liquidity1 = pool.liquidity1();
 
-        uint256 collateralValue;
+        uint256 collateralValue = loan.loanType == LoanType.Token0
+            ? (liquidity0 * loan.collateralAmount) / liquidity1
+            : (liquidity1 * loan.collateralAmount) / liquidity0;
 
-        if (loan.loanType == LoanType.TokenA) {
-            collateralValue = (liquidityA * loan.collateralAmount) / liquidityB;
-        } else {
-            collateralValue = (liquidityB * loan.collateralAmount) / liquidityA;
-        }
-
-        return (collateralValue * 1e18 * COLLATERAL_RATIO_DENOMINATOR) / (loan.borrowedAmount * COLLATERAL_RATIO_NUMERATOR);
+        return (collateralValue * 1e18 * COLLATERAL_RATIO_DENOMINATOR) /
+               (loan.borrowedAmount * COLLATERAL_RATIO_NUMERATOR);
     }
 }
