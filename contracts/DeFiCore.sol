@@ -10,8 +10,14 @@ contract DeFiCore {
     address[] public allPools;
     address public lendingCore;
 
+    function _getPoolId(address token0, address token1) internal pure returns (bytes32) {
+    (address a, address b) = token0 < token1 ? (token0, token1) : (token1, token0);
+    return keccak256(abi.encodePacked(a, b));
+    }
+
+
     function createPool(address token0, address token1, uint256 amount0, uint256 amount1) external {
-    bytes32 poolId = keccak256(abi.encodePacked(token0, token1));
+    bytes32 poolId = _getPoolId(token0, token1);
     
     IERC20(token0).transferFrom(msg.sender, address(this), amount0);
     IERC20(token1).transferFrom(msg.sender, address(this), amount1);
@@ -28,9 +34,10 @@ contract DeFiCore {
     }
 
     function getPools(address token0, address token1) external view returns (address[] memory) {
-        bytes32 poolId = keccak256(abi.encodePacked(token0, token1));
+        bytes32 poolId = _getPoolId(token0, token1); // ✅
         return pools[poolId];
     }
+
 
 
     function setLendingCore(address _lendingCore) external {
