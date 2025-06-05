@@ -53,11 +53,22 @@ contract LendingCore {
         IERC20(token1).transferFrom(msg.sender, address(this), collateralAmount);
         IERC20(token0).transfer(msg.sender, borrowAmount);
 
+        _finalizeBorrowToken0(poolAddress, token0, token1, collateralAmount, borrowAmount);
+    }
+
+    function _finalizeBorrowToken0(
+        address poolAddress,
+        address token0,
+        address token1,
+        uint256 collateralAmount,
+        uint256 borrowAmount
+    ) internal {
         uint256 borrowWithInterest = borrowAmount + (borrowAmount * INTEREST_RATE_NUMERATOR) / INTEREST_RATE_DENOMINATOR;
 
         loans[msg.sender][poolAddress] = Loan(collateralAmount, borrowWithInterest, LoanType.Token0);
         helper.logBorrow(msg.sender, poolAddress, token0, borrowAmount, token1, collateralAmount);
     }
+
 
     function borrowToken1(uint256 collateralAmount, uint256 borrowAmount, address poolAddress) external {
         require(loans[msg.sender][poolAddress].borrowedAmount == 0, "Loan already active");
@@ -74,8 +85,17 @@ contract LendingCore {
         IERC20(token0).transferFrom(msg.sender, address(this), collateralAmount);
         IERC20(token1).transfer(msg.sender, borrowAmount);
 
-        uint256 borrowWithInterest = borrowAmount + (borrowAmount * INTEREST_RATE_NUMERATOR) / INTEREST_RATE_DENOMINATOR;
+        _finalizeBorrowToken1(poolAddress, token0, token1, collateralAmount, borrowAmount);
+    }
 
+    function _finalizeBorrowToken1(
+        address poolAddress,
+        address token0,
+        address token1,
+        uint256 collateralAmount,
+        uint256 borrowAmount
+    ) internal {
+        uint256 borrowWithInterest = borrowAmount + (borrowAmount * INTEREST_RATE_NUMERATOR) / INTEREST_RATE_DENOMINATOR;
         loans[msg.sender][poolAddress] = Loan(collateralAmount, borrowWithInterest, LoanType.Token1);
         helper.logBorrow(msg.sender, poolAddress, token1, borrowAmount, token0, collateralAmount);
     }
