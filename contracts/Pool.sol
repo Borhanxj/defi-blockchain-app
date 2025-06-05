@@ -23,8 +23,8 @@ contract Pool {
         address _creator
     ) {
         require(_token0 != _token1, "Same token");
-        tokenA = _token0;
-        tokenB = _token1;
+        token0 = _token0;
+        token1 = _token1;
         owner = _creator;
     }
     function initializeLiquidity(uint256 amount0, uint256 amount1) external {
@@ -94,8 +94,8 @@ contract Pool {
         liquidity0 -= amount0;
         liquidity1 -= amount1;
 
-        IERC20(tokenA).transfer(msg.sender, amount0);
-        IERC20(tokenB).transfer(msg.sender, amount1);
+        IERC20(token0).transfer(msg.sender, amount0);
+        IERC20(token1).transfer(msg.sender, amount1);
     }
 
     function addLiquiditySingleToken(address tokenIn, uint256 amountIn) external {
