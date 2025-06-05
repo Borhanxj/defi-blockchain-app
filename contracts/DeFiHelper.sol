@@ -18,6 +18,42 @@ contract DeFiHelper {
     event LiquidityAddedLogged(address indexed user, address indexed pool, uint256 amount0, uint256 amount1, uint256 shareMinted, uint256 timestamp);
     event LiquidityRemovedLogged(address indexed user, address indexed pool, uint256 amount0, uint256 amount1, uint256 shareBurned, uint256 timestamp);
     event LendingActivityLogged(address indexed user, address indexed pool, string activityType, uint256 amount, uint256 timestamp);
+    event BorrowLogged(
+        address indexed user,
+        address indexed pool,
+        address tokenBorrowed,
+        uint256 amountBorrowed,
+        address collateralToken,
+        uint256 collateralAmount,
+        uint256 timestamp
+    );
+    event LendLogged(
+        address indexed user,
+        address indexed pool,
+        address tokenLent,
+        uint256 amount,
+        uint256 timestamp
+    );
+    function logLend(
+        address user,
+        address pool,
+        address tokenLent,
+        uint256 amount
+    ) external {
+        emit LendLogged(user, pool, tokenLent, amount, block.timestamp);
+    }
+
+
+    function logBorrow(
+        address user,
+        address pool,
+        address tokenBorrowed,
+        uint256 amountBorrowed,
+        address collateralToken,
+        uint256 collateralAmount
+    ) external {
+        emit BorrowLogged(user, pool, tokenBorrowed, amountBorrowed, collateralToken, collateralAmount, block.timestamp);
+    }
 
     function addPool(address pool) external {
         allPools.push(pool);
