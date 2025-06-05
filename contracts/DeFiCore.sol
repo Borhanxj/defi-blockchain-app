@@ -6,31 +6,32 @@ import "./LendingCore.sol";
 
 contract DeFiCore {
 
-    mapping(bytes32 => address) public pools;
+    mapping(bytes32 => address[]) public pools;
     address[] public allPools;
     address public lendingCore;
 
-    function createPool(address token0,address token1,uint256 amount0, uint256 amount1) external {
-        bytes32 poolId = keccak256(abi.encodePacked(token0, token1));
-        require(pools[poolId] == address(0), "Pool already exists");
+    function createPool(address token0, address token1, uint256 amount0, uint256 amount1) external {
+    bytes32 poolId = keccak256(abi.encodePacked(token0, token1));
+    
+    IERC20(token0).transferFrom(msg.sender, address(this), amount0);
+    IERC20(token1).transferFrom(msg.sender, address(this), amount1);
 
-        IERC20(token0).transferFrom(msg.sender, address(this), amount0);
-        IERC20(token1).transferFrom(msg.sender, address(this), amount1);
+    Pool newPool = new Pool(token0, token1, msg.sender);
 
-        Pool newPool = new Pool(token0, token1, msg.sender);
+    IERC20(token0).transfer(address(newPool), amount0);
+    IERC20(token1).transfer(address(newPool), amount1);
 
-        IERC20(token0).transfer(address(newPool), amount0);
-        IERC20(token1).transfer(address(newPool), amount1);
+    newPool.initializeLiquidity(amount0, amount1);
 
-        newPool.initializeLiquidity(amount0, amount1);
-        pools[poolId] = address(newPool);
-        allPools.push(address(newPool));
+    pools[poolId].push(address(newPool));
+    allPools.push(address(newPool));
     }
 
-    function getPool(address token0, address token1) external view returns (address) {
+    function getPools(address token0, address token1) external view returns (address[] memory) {
         bytes32 poolId = keccak256(abi.encodePacked(token0, token1));
         return pools[poolId];
     }
+
 
     function setLendingCore(address _lendingCore) external {
         require(lendingCore == address(0), "LendingCore already set");
