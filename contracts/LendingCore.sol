@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./Pool.sol";
+import "./DeFiHelper.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract LendingCore {
@@ -13,9 +14,7 @@ contract LendingCore {
         LoanType loanType;
     }
 
-    // ======= Per-POOL Loan, Stake, and Interest Tracking =======
-
-    mapping(address => mapping(address => Loan)) public loans; // user => pool => loan
+    mapping(address => mapping(address => Loan)) public loans;
     mapping(address => mapping(address => uint256)) public stakes0;
     mapping(address => mapping(address => uint256)) public stakes1;
     mapping(address => mapping(address => uint256)) public withdrawnInterest0;
@@ -26,17 +25,18 @@ contract LendingCore {
     mapping(address => uint256) public totalStaked0;
     mapping(address => uint256) public totalStaked1;
 
-    // ======= Constants =======
-    uint256 public constant INTEREST_RATE_NUMERATOR = 500; // 5%
+    DeFiHelper public helper;
+
+    uint256 public constant INTEREST_RATE_NUMERATOR = 500;
     uint256 public constant INTEREST_RATE_DENOMINATOR = 10000;
-
-    uint256 public constant COLLATERAL_RATIO_NUMERATOR = 15000; // 150%
+    uint256 public constant COLLATERAL_RATIO_NUMERATOR = 15000;
     uint256 public constant COLLATERAL_RATIO_DENOMINATOR = 10000;
-
-    uint256 public constant LIQUIDATOR_REWARD_NUMERATOR = 9500; // 95%
+    uint256 public constant LIQUIDATOR_REWARD_NUMERATOR = 9500;
     uint256 public constant LIQUIDATOR_REWARD_DENOMINATOR = 10000;
 
-    // ======= Borrowing =======
+    constructor(address _helper) {
+        helper = DeFiHelper(_helper);
+    }
 
     function borrowToken0(uint256 collateralAmount, uint256 borrowAmount, address poolAddress) external {
         require(loans[msg.sender][poolAddress].borrowedAmount == 0, "Loan already active");
@@ -56,6 +56,7 @@ contract LendingCore {
         uint256 borrowWithInterest = borrowAmount + (borrowAmount * INTEREST_RATE_NUMERATOR) / INTEREST_RATE_DENOMINATOR;
 
         loans[msg.sender][poolAddress] = Loan(collateralAmount, borrowWithInterest, LoanType.Token0);
+        helper.logBorrow(msg.sender, poolAddress, token0, borrowAmount, token1, collateralAmount);
     }
 
     function borrowToken1(uint256 collateralAmount, uint256 borrowAmount, address poolAddress) external {
@@ -76,9 +77,8 @@ contract LendingCore {
         uint256 borrowWithInterest = borrowAmount + (borrowAmount * INTEREST_RATE_NUMERATOR) / INTEREST_RATE_DENOMINATOR;
 
         loans[msg.sender][poolAddress] = Loan(collateralAmount, borrowWithInterest, LoanType.Token1);
+        helper.logBorrow(msg.sender, poolAddress, token1, borrowAmount, token0, collateralAmount);
     }
-
-    // ======= Repayment =======
 
     function repay(uint256 amount, address poolAddress) external {
         Loan storage loan = loans[msg.sender][poolAddress];
@@ -109,8 +109,6 @@ contract LendingCore {
         }
     }
 
-    // ======= Liquidation =======
-
     function liquidate(address borrower, address poolAddress) external {
         Loan memory loan = loans[borrower][poolAddress];
         require(loan.borrowedAmount > 0, "No active loan");
@@ -135,8 +133,6 @@ contract LendingCore {
         delete loans[borrower][poolAddress];
     }
 
-    // ======= Lending / Interest =======
-
     function lendToken0(uint256 amount, address poolAddress) external {
         require(amount > 0, "Cannot lend 0");
         address token0 = Pool(poolAddress).token0();
@@ -144,6 +140,8 @@ contract LendingCore {
 
         stakes0[msg.sender][poolAddress] += amount;
         totalStaked0[poolAddress] += amount;
+
+        helper.logLend(msg.sender, poolAddress, token0, amount);
     }
 
     function withdrawLentToken0(uint256 amount, address poolAddress) external {
@@ -174,6 +172,8 @@ contract LendingCore {
 
         stakes1[msg.sender][poolAddress] += amount;
         totalStaked1[poolAddress] += amount;
+
+        helper.logLend(msg.sender, poolAddress, token1, amount);
     }
 
     function withdrawLentToken1(uint256 amount, address poolAddress) external {
@@ -196,8 +196,6 @@ contract LendingCore {
         uint256 totalPayout = amount + withdrawableInterest;
         IERC20(token1).transfer(msg.sender, totalPayout);
     }
-
-    // ======= Health Factor =======
 
     function getHealthFactor(address borrower, address poolAddress) external view returns (uint256) {
         Loan memory loan = loans[borrower][poolAddress];
