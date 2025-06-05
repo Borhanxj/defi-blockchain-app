@@ -5,40 +5,40 @@ import "./Pool.sol";
 import "./LendingCore.sol";
 
 contract DeFiCore {
-
     mapping(bytes32 => address[]) public pools;
     address[] public allPools;
     address public lendingCore;
 
+    event PoolCreated(address indexed token0, address indexed token1, address pool); // ✅ NEW
+
     function _getPoolId(address token0, address token1) internal pure returns (bytes32) {
-    (address a, address b) = token0 < token1 ? (token0, token1) : (token1, token0);
-    return keccak256(abi.encodePacked(a, b));
+        (address a, address b) = token0 < token1 ? (token0, token1) : (token1, token0);
+        return keccak256(abi.encodePacked(a, b));
     }
 
-
     function createPool(address token0, address token1, uint256 amount0, uint256 amount1) external {
-    bytes32 poolId = _getPoolId(token0, token1);
-    
-    IERC20(token0).transferFrom(msg.sender, address(this), amount0);
-    IERC20(token1).transferFrom(msg.sender, address(this), amount1);
+        bytes32 poolId = _getPoolId(token0, token1);
 
-    Pool newPool = new Pool(token0, token1, msg.sender);
+        IERC20(token0).transferFrom(msg.sender, address(this), amount0);
+        IERC20(token1).transferFrom(msg.sender, address(this), amount1);
 
-    IERC20(token0).transfer(address(newPool), amount0);
-    IERC20(token1).transfer(address(newPool), amount1);
+        Pool newPool = new Pool(token0, token1, msg.sender);
 
-    newPool.initializeLiquidity(amount0, amount1);
+        IERC20(token0).transfer(address(newPool), amount0);
+        IERC20(token1).transfer(address(newPool), amount1);
 
-    pools[poolId].push(address(newPool));
-    allPools.push(address(newPool));
+        newPool.initializeLiquidity(amount0, amount1);
+
+        pools[poolId].push(address(newPool));
+        allPools.push(address(newPool));
+
+        emit PoolCreated(token0, token1, address(newPool)); // ✅ EMIT EVENT
     }
 
     function getPools(address token0, address token1) external view returns (address[] memory) {
-        bytes32 poolId = _getPoolId(token0, token1); // ✅
+        bytes32 poolId = _getPoolId(token0, token1);
         return pools[poolId];
     }
-
-
 
     function setLendingCore(address _lendingCore) external {
         require(lendingCore == address(0), "LendingCore already set");
@@ -81,7 +81,6 @@ contract DeFiCore {
         return LendingCore(lendingCore).getHealthFactor(borrower, poolAddress);
     }
 
-
     function swap(address poolAddress, address tokenIn, uint256 amountIn, uint256 minAmountOut) external {
         Pool(poolAddress).swap(tokenIn, amountIn, minAmountOut);
     }
@@ -103,13 +102,12 @@ contract DeFiCore {
     }
 
     function getPoolInfo(address poolAddress) external view returns (address token0, address token1, uint256 liquidity0, uint256 liquidity1) {
-    Pool pool = Pool(poolAddress);
-    return (
-        pool.token0(),
-        pool.token1(),
-        pool.liquidity0(),
-        pool.liquidity1()
-    );
-}
-
+        Pool pool = Pool(poolAddress);
+        return (
+            pool.token0(),
+            pool.token1(),
+            pool.liquidity0(),
+            pool.liquidity1()
+        );
+    }
 }
