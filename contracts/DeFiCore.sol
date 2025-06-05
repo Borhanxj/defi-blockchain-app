@@ -82,8 +82,8 @@ contract DeFiCore {
     }
 
 
-    function swap(address poolAddress, address tokenIn, uint256 amountIn) external {
-        Pool(poolAddress).swap(tokenIn, amountIn);
+    function swap(address poolAddress, address tokenIn, uint256 amountIn, uint256 minAmountOut) external {
+        Pool(poolAddress).swap(tokenIn, amountIn, minAmountOut);
     }
 
     function addLiquidity(address poolAddress, uint256 amount0, uint256 amount1) external {
