@@ -63,7 +63,7 @@ contract Pool {
             liquidity0 -= amountOut;
         }
 
-        helper.logSwap(msg.sender, address(this), tokenIn, amountIn, tokenOut, amountOut);
+        helper.logSwap(msg.sender, address(this), tokenIn, amountIn, amountOut);
     }
 
     function addLiquidity(uint256 amount0, uint256 amount1) external {
@@ -86,7 +86,7 @@ contract Pool {
         lpShares[msg.sender] += share;
         totalShares += share;
 
-        helper.logAddLiquidity(msg.sender, address(this), amount0, amount1, share);
+        helper.logLiquidityAdd(msg.sender, address(this), amount0, amount1, share);
     }
 
     function removeLiquidity(uint256 share) external {
@@ -135,6 +135,6 @@ contract Pool {
         lpShares[msg.sender] += share;
         totalShares += share;
 
-        helper.logAddLiquidity(msg.sender, address(this), tokenIn == token0 ? amountIn : 0, tokenIn == token1 ? amountIn : 0, share);
+        helper.logLiquidityAdd(msg.sender, address(this), tokenIn == token0 ? amountIn : 0, tokenIn == token1 ? amountIn : 0, share);
     }
 }
