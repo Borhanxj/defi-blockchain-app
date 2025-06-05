@@ -10,25 +10,25 @@ contract DeFiCore {
     address[] public allPools;
     address public lendingCore;
 
-    function createPool(address tokenA,address tokenB,uint256 amountA, uint256 amountB) external {
-        bytes32 poolId = keccak256(abi.encodePacked(tokenA, tokenB));
+    function createPool(address token0,address token1,uint256 amount0, uint256 amount1) external {
+        bytes32 poolId = keccak256(abi.encodePacked(token0, token1));
         require(pools[poolId] == address(0), "Pool already exists");
 
-        IERC20(tokenA).transferFrom(msg.sender, address(this), amountA);
-        IERC20(tokenB).transferFrom(msg.sender, address(this), amountB);
+        IERC20(token0).transferFrom(msg.sender, address(this), amount0);
+        IERC20(token1).transferFrom(msg.sender, address(this), amount1);
 
-        Pool newPool = new Pool(tokenA, tokenB, msg.sender);
+        Pool newPool = new Pool(token0, token1, msg.sender);
 
-        IERC20(tokenA).transfer(address(newPool), amountA);
-        IERC20(tokenB).transfer(address(newPool), amountB);
+        IERC20(token0).transfer(address(newPool), amount0);
+        IERC20(token1).transfer(address(newPool), amount1);
 
-        newPool.initializeLiquidity(amountA, amountB);
+        newPool.initializeLiquidity(amount0, amount1);
         pools[poolId] = address(newPool);
         allPools.push(address(newPool));
     }
 
-    function getPool(address tokenA, address tokenB) external view returns (address) {
-        bytes32 poolId = keccak256(abi.encodePacked(tokenA, tokenB));
+    function getPool(address token0, address token1) external view returns (address) {
+        bytes32 poolId = keccak256(abi.encodePacked(token0, token1));
         return pools[poolId];
     }
 
@@ -37,12 +37,12 @@ contract DeFiCore {
         lendingCore = _lendingCore;
     }
 
-    function borrowTokenA(uint256 collateralAmount, uint256 borrowAmount, address poolAddress) external {
-        LendingCore(lendingCore).borrowTokenA(collateralAmount, borrowAmount, poolAddress);
+    function borrowToken0(uint256 collateralAmount, uint256 borrowAmount, address poolAddress) external {
+        LendingCore(lendingCore).borrowToken0(collateralAmount, borrowAmount, poolAddress);
     }
 
-    function borrowTokenB(uint256 collateralAmount, uint256 borrowAmount, address poolAddress) external {
-        LendingCore(lendingCore).borrowTokenB(collateralAmount, borrowAmount, poolAddress);
+    function borrowToken1(uint256 collateralAmount, uint256 borrowAmount, address poolAddress) external {
+        LendingCore(lendingCore).borrowToken1(collateralAmount, borrowAmount, poolAddress);
     }
 
     function repay(uint256 amount, address poolAddress) external {
@@ -53,20 +53,20 @@ contract DeFiCore {
         LendingCore(lendingCore).liquidate(borrower, poolAddress);
     }
 
-    function lendTokenA(uint256 amount, address poolAddress) external {
-        LendingCore(lendingCore).lendTokenA(amount, poolAddress);
+    function lendToken0(uint256 amount, address poolAddress) external {
+        LendingCore(lendingCore).lendToken0(amount, poolAddress);
     }
 
-    function withdrawLentTokenA(uint256 amount, address poolAddress) external {
-        LendingCore(lendingCore).withdrawLentTokenA(amount, poolAddress);
+    function withdrawLentToken0(uint256 amount, address poolAddress) external {
+        LendingCore(lendingCore).withdrawLentToken0(amount, poolAddress);
     }
 
-    function lendTokenB(uint256 amount, address poolAddress) external {
-        LendingCore(lendingCore).lendTokenB(amount, poolAddress);
+    function lendToken1(uint256 amount, address poolAddress) external {
+        LendingCore(lendingCore).lendToken1(amount, poolAddress);
     }
 
-    function withdrawLentTokenB(uint256 amount, address poolAddress) external {
-        LendingCore(lendingCore).withdrawLentTokenB(amount, poolAddress);
+    function withdrawLentToken1(uint256 amount, address poolAddress) external {
+        LendingCore(lendingCore).withdrawLentToken1(amount, poolAddress);
     }
 
     function getHealthFactor(address borrower, address poolAddress) external view returns (uint256) {
@@ -78,8 +78,8 @@ contract DeFiCore {
         Pool(poolAddress).swap(tokenIn, amountIn);
     }
 
-    function addLiquidity(address poolAddress, uint256 amountA, uint256 amountB) external {
-        Pool(poolAddress).addLiquidity(amountA, amountB);
+    function addLiquidity(address poolAddress, uint256 amount0, uint256 amount1) external {
+        Pool(poolAddress).addLiquidity(amount0, amount1);
     }
 
     function addLiquiditySingleToken(address poolAddress, address tokenIn, uint256 amountIn) external {
@@ -94,13 +94,13 @@ contract DeFiCore {
         return allPools;
     }
 
-    function getPoolInfo(address poolAddress) external view returns (address tokenA, address tokenB, uint256 liquidityA, uint256 liquidityB) {
+    function getPoolInfo(address poolAddress) external view returns (address token0, address token1, uint256 liquidity0, uint256 liquidity1) {
     Pool pool = Pool(poolAddress);
     return (
-        pool.tokenA(),
-        pool.tokenB(),
-        pool.liquidityA(),
-        pool.liquidityB()
+        pool.token0(),
+        pool.token1(),
+        pool.liquidity0(),
+        pool.liquidity1()
     );
 }
 
