@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./DeFiHelper.sol";
 
 contract Pool {
     address public token0;
@@ -17,22 +18,26 @@ contract Pool {
     uint256 public constant FEE_NUMERATOR = 997;
     uint256 public constant FEE_DENOMINATOR = 1000;
 
+    DeFiHelper public helper;
+
     constructor(
         address _token0,
         address _token1,
-        address _creator
+        address _creator,
+        address _helper
     ) {
         require(_token0 != _token1, "Same token");
         token0 = _token0;
         token1 = _token1;
         owner = _creator;
+        helper = DeFiHelper(_helper);
     }
+
     function initializeLiquidity(uint256 amount0, uint256 amount1) external {
         require(liquidity0 == 0 && liquidity1 == 0, "Already initialized");
         liquidity0 = amount0;
         liquidity1 = amount1;
     }
-
 
     function swap(address tokenIn, uint256 amountIn, uint256 minAmountOut) external {
         require(tokenIn == token0 || tokenIn == token1, "Invalid tokenIn");
@@ -57,8 +62,9 @@ contract Pool {
             liquidity1 += amountIn;
             liquidity0 -= amountOut;
         }
-    }
 
+        helper.logSwap(msg.sender, address(this), tokenIn, amountIn, tokenOut, amountOut);
+    }
 
     function addLiquidity(uint256 amount0, uint256 amount1) external {
         require( liquidity0 * amount1 == liquidity1 * amount0,"Deposit ratio mismatch");
@@ -79,6 +85,8 @@ contract Pool {
 
         lpShares[msg.sender] += share;
         totalShares += share;
+
+        helper.logAddLiquidity(msg.sender, address(this), amount0, amount1, share);
     }
 
     function removeLiquidity(uint256 share) external {
@@ -116,8 +124,8 @@ contract Pool {
             liquidity1 -= amountOut;
         } 
         else {
-        liquidity1 += amountIn;
-        liquidity0 -= amountOut;
+            liquidity1 += amountIn;
+            liquidity0 -= amountOut;
         }
 
         uint256 liquidityAdded = amountIn + amountOut;
@@ -126,5 +134,7 @@ contract Pool {
 
         lpShares[msg.sender] += share;
         totalShares += share;
+
+        helper.logAddLiquidity(msg.sender, address(this), tokenIn == token0 ? amountIn : 0, tokenIn == token1 ? amountIn : 0, share);
     }
 }
