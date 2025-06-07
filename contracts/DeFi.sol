@@ -225,7 +225,7 @@ contract DeFi is ReentrancyGuard{
         share.tokenA_share = 0;
 
         address tokenA = AMM(poolAddress).tokenA();
-        IERC20(tokenA).safeTransferFrom(msg.sender, totalAmount);
+        IERC20(tokenA).safeTransfer(msg.sender, totalAmount);
     }
 
     function withdrawTokenB(address poolAddress) external nonReentrant {
@@ -244,7 +244,7 @@ contract DeFi is ReentrancyGuard{
         share.tokenB_share = 0;
 
         address tokenB = AMM(poolAddress).tokenB();
-        IERC20(tokenB).safeTransferFrom(msg.sender, totalAmount);
+        IERC20(tokenB).safeTransfer(msg.sender, totalAmount);
     }
 
 }
