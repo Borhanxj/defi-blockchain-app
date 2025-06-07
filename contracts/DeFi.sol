@@ -193,7 +193,7 @@ contract DeFi is ReentrancyGuard{
         require(amount > 0, "Cannot lend 0");
 
         address tokenA = AMM(poolAddress).tokenA();
-        IERC20(tokenA).transferFrom(msg.sender, address(this), amount);
+        IERC20(tokenA).safeTransferFrom(msg.sender, address(this), amount);
         totalTokenAStaked[poolAddress] += amount;
 
         shares[msg.sender][poolAddress].tokenA_share += amount;
@@ -203,7 +203,7 @@ contract DeFi is ReentrancyGuard{
         require(amount > 0, "Cannot lend 0");
 
         address tokenB = AMM(poolAddress).tokenB();
-        IERC20(tokenB).transferFrom(msg.sender, address(this), amount);
+        IERC20(tokenB).safeTransferFrom(msg.sender, address(this), amount);
         totalTokenBStaked[poolAddress] += amount;
 
         shares[msg.sender][poolAddress].tokenB_share += amount;
@@ -225,7 +225,7 @@ contract DeFi is ReentrancyGuard{
         share.tokenA_share = 0;
 
         address tokenA = AMM(poolAddress).tokenA();
-        IERC20(tokenA).transfer(msg.sender, totalAmount);
+        IERC20(tokenA).safeTransferFrom(msg.sender, totalAmount);
     }
 
     function withdrawTokenB(address poolAddress) external nonReentrant {
@@ -244,7 +244,7 @@ contract DeFi is ReentrancyGuard{
         share.tokenB_share = 0;
 
         address tokenB = AMM(poolAddress).tokenB();
-        IERC20(tokenB).transfer(msg.sender, totalAmount);
+        IERC20(tokenB).safeTransferFrom(msg.sender, totalAmount);
     }
 
 }
