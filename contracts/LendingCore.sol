@@ -156,11 +156,11 @@ contract LendingCore {
     function lendToken0(uint256 amount, address poolAddress) external {
         require(amount > 0, "Cannot lend 0");
         address token0 = Pool(poolAddress).token0();
-        IERC20(token0).transferFrom(msg.sender, address(this), amount);
 
         stakes0[msg.sender][poolAddress] += amount;
         totalStaked0[poolAddress] += amount;
 
+        IERC20(token0).transferFrom(msg.sender, address(this), amount);
         helper.logLend(msg.sender, poolAddress, token0, amount);
     }
 
@@ -188,11 +188,11 @@ contract LendingCore {
     function lendToken1(uint256 amount, address poolAddress) external {
         require(amount > 0, "Cannot lend 0");
         address token1 = Pool(poolAddress).token1();
-        IERC20(token1).transferFrom(msg.sender, address(this), amount);
 
         stakes1[msg.sender][poolAddress] += amount;
         totalStaked1[poolAddress] += amount;
 
+        IERC20(token1).transferFrom(msg.sender, address(this), amount);
         helper.logLend(msg.sender, poolAddress, token1, amount);
     }
 
