@@ -11,8 +11,8 @@ contract Core is ReentrancyGuard {
 
     function createPool(address token0,address token1,uint256 amount0, uint256 amount1) external nonReentrant {
 
-        IERC20(token0).transferFrom(msg.sender, address(this), amount0);
-        IERC20(token1).transferFrom(msg.sender, address(this), amount1);
+        IERC20(token0).safeTransferFrom(msg.sender, address(this), amount0);
+        IERC20(token1).safeTransferFrom(msg.sender, address(this), amount1);
 
         AMM newPool = new AMM(token0, token1, msg.sender);
 
