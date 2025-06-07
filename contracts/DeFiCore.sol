@@ -25,18 +25,18 @@ contract DeFiCore {
     function createPool(address token0, address token1, uint256 amount0, uint256 amount1) external {
         bytes32 poolId = _getPoolId(token0, token1);
 
-        IERC20(token0).transferFrom(msg.sender, address(this), amount0);
-        IERC20(token1).transferFrom(msg.sender, address(this), amount1);
-
         Pool newPool = new Pool(token0, token1, msg.sender, address(helper));
-
-        IERC20(token0).transfer(address(newPool), amount0);
-        IERC20(token1).transfer(address(newPool), amount1);
 
         newPool.initializeLiquidity(amount0, amount1);
 
         pools[poolId].push(address(newPool));
         allPools.push(address(newPool));
+
+        IERC20(token0).transferFrom(msg.sender, address(this), amount0);
+        IERC20(token1).transferFrom(msg.sender, address(this), amount1);
+
+        IERC20(token0).transfer(address(newPool), amount0);
+        IERC20(token1).transfer(address(newPool), amount1);
 
         emit PoolCreated(token0, token1, address(newPool));
     }
