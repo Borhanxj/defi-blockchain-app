@@ -52,9 +52,6 @@ contract Pool {
         require(amountOut > 0, "Insufficient output");
         require(amountOut >= minAmountOut, "Slippage exceeded");
 
-        IERC20(tokenIn).transferFrom(msg.sender, address(this), amountIn);
-        IERC20(tokenOut).transfer(msg.sender, amountOut);
-
         if (tokenIn == token0) {
             liquidity0 += amountIn;
             liquidity1 -= amountOut;
@@ -63,14 +60,14 @@ contract Pool {
             liquidity0 -= amountOut;
         }
 
+        IERC20(tokenIn).transferFrom(msg.sender, address(this), amountIn);
+        IERC20(tokenOut).transfer(msg.sender, amountOut);
+
         helper.logSwap(msg.sender, address(this), tokenIn, amountIn, amountOut);
     }
 
     function addLiquidity(uint256 amount0, uint256 amount1) external {
         require( liquidity0 * amount1 == liquidity1 * amount0,"Deposit ratio mismatch");
-
-        IERC20(token0).transferFrom(msg.sender, address(this), amount0);
-        IERC20(token1).transferFrom(msg.sender, address(this), amount1);
 
         liquidity0 += amount0;
         liquidity1 += amount1;
@@ -85,6 +82,9 @@ contract Pool {
 
         lpShares[msg.sender] += share;
         totalShares += share;
+
+        IERC20(token0).transferFrom(msg.sender, address(this), amount0);
+        IERC20(token1).transferFrom(msg.sender, address(this), amount1);
 
         helper.logLiquidityAdd(msg.sender, address(this), amount0, amount1, share);
     }
@@ -112,7 +112,7 @@ contract Pool {
         uint256 liquidityIn = tokenIn == token0 ? liquidity0 : liquidity1;
         uint256 liquidityOut = tokenIn == token0 ? liquidity1 : liquidity0;
 
-        IERC20(tokenIn).transferFrom(msg.sender, address(this), amountIn);
+       
 
         uint256 amountInWithFee = (amountIn * FEE_NUMERATOR) / FEE_DENOMINATOR;
         uint256 amountOut = (liquidityOut * amountInWithFee) / (liquidityIn + amountInWithFee);
@@ -135,6 +135,8 @@ contract Pool {
         lpShares[msg.sender] += share;
         totalShares += share;
 
+        
+        IERC20(tokenIn).transferFrom(msg.sender, address(this), amountIn);
         helper.logLiquidityAdd(msg.sender, address(this), tokenIn == token0 ? amountIn : 0, tokenIn == token1 ? amountIn : 0, share);
     }
 }
