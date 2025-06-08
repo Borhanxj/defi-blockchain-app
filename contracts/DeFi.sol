@@ -55,15 +55,14 @@ contract DeFi is ReentrancyGuard{
         uint256 collateralValueInA = (liquidityA * collateralAmount) / liquidityB;
 
         require(collateralValueInA * 100 >= borrowAmount * 150,"Insufficient collateral: min 150% required");
+        require(totalTokenAStaked[poolAddress] >= borrowAmount, "Insufficient TokenA liquidity");
 
         loans[msg.sender] = Loan({
             collateralAmount: collateralAmount,
             borrowedAmount: borrowAmount,
             loanType: LoanType.TokenA
         });
-
-        require(totalTokenAStaked[poolAddress] >= borrowAmount, "Insufficient TokenA liquidity");
-
+        
         totalTokenAStaked[poolAddress]-= borrowAmount;
         totalTokenBStaked[poolAddress]+= collateralAmount;
 
@@ -83,6 +82,7 @@ contract DeFi is ReentrancyGuard{
         uint256 collateralValueInB = (liquidityB * collateralAmount) / liquidityA;
 
         require(collateralValueInB * 100 >= borrowAmount * 150, "Insufficient collateral: min 150% required");
+        require(totalTokenBStaked[poolAddress] >= borrowAmount, "Insufficient TokenB liquidity");
 
         loans[msg.sender] = Loan({
             collateralAmount: collateralAmount,
@@ -90,10 +90,9 @@ contract DeFi is ReentrancyGuard{
             loanType: LoanType.TokenB
         });
 
-        require(totalTokenAStaked[poolAddress] >= borrowAmount, "Insufficient TokenA liquidity");
 
-        totalTokenAStaked[poolAddress]-= borrowAmount;
-        totalTokenBStaked[poolAddress]+= collateralAmount;
+        totalTokenBStaked[poolAddress]-= borrowAmount;
+        totalTokenAStaked[poolAddress]+= collateralAmount;
 
         IERC20(tokenA).safeTransferFrom(msg.sender, address(this), collateralAmount);
         IERC20(tokenB).safeTransfer(msg.sender, borrowAmount);
