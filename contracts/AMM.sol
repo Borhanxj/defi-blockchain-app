@@ -107,7 +107,6 @@ contract AMM is ReentrancyGuard{
 
         uint256 totalLiquidity = liquidityA + liquidityB;
 
-        IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
 
         if (tokenIn == tokenA) {
             uint256 tokenToAddA = (liquidityA * amountIn) / totalLiquidity;
@@ -123,5 +122,7 @@ contract AMM is ReentrancyGuard{
 
         lpShares[msg.sender] += amountIn;
         totalShares += amountIn;
+
+        IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
     }
 }
