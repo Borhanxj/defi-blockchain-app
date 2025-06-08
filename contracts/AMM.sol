@@ -103,31 +103,25 @@ contract AMM is ReentrancyGuard{
     function addLiquidityWithOneToken(address tokenIn, uint256 amountIn) external nonReentrant {
         require(tokenIn == tokenA || tokenIn == tokenB, "Invalid token");
         require(amountIn > 0, "Zero input");
+        require(liquidityA > 0 && liquidityB > 0, "Pool not initialized");
 
-        uint256 x = tokenIn == tokenA ? liquidityA : liquidityB;
-        uint256 y = tokenIn == tokenA ? liquidityB : liquidityA;
+        uint256 totalLiquidity = liquidityA + liquidityB;
 
-        uint256 swapAmount = (amountIn * y) / (x + y);
-        uint256 remaining = amountIn - swapAmount;
-
-        require(swapAmount > 0 && remaining > 0, "Bad swap ratio");
-
-        
-
-        uint256 amountOut = (swapAmount * y) / (x + swapAmount);
-        require(amountOut > 0, "Zero output");
+        IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
 
         if (tokenIn == tokenA) {
-            liquidityA += remaining;
-            liquidityB += amountOut;
+            uint256 tokenToAddA = (liquidityA * amountIn) / totalLiquidity;
+            uint256 tokenToAddB = amountIn - tokenToAddA;
+            liquidityA += tokenToAddA;
+            liquidityB += tokenToAddB;
         } else {
-            liquidityB += remaining;
-            liquidityA += amountOut;
+            uint256 tokenToAddB = (liquidityB * amountIn) / totalLiquidity;
+            uint256 tokenToAddA = amountIn - tokenToAddB;
+            liquidityB += tokenToAddB;
+            liquidityA += tokenToAddA;
         }
 
         lpShares[msg.sender] += amountIn;
         totalShares += amountIn;
-
-        IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
     }
 }
