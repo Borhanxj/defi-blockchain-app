@@ -30,8 +30,8 @@ contract AMM is ReentrancyGuard {
 
     constructor(address _token0, address _token1, address _creator) {
         require(_token0 != _token1, "Same token");
-        tokenA = _token0;
-        tokenB = _token1;
+        token0 = _token0;
+        token1 = _token1;
         owner = _creator;
     }
 
