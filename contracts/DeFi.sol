@@ -168,16 +168,12 @@ contract DeFi is ReentrancyGuard{
         address tokenB = pool.tokenB();
 
         if (loan.loanType == LoanType.TokenA) {
-            IERC20(tokenA).safeTransferFrom(msg.sender, address(this), repayAmount);
             totalTokenAStaked[poolAddress] += repayAmount;
             totalInterestTokenA[poolAddress] += (repayAmount * INTEREST_RATE_NUMERATOR) / INTEREST_RATE_DENOMINATOR;
-            IERC20(tokenB).safeTransfer(msg.sender, collateralToSeize);
         } 
         else {
-            IERC20(tokenB).safeTransferFrom(msg.sender, address(this), repayAmount);
             totalTokenBStaked[poolAddress] += repayAmount;
             totalInterestTokenB[poolAddress] += (repayAmount * INTEREST_RATE_NUMERATOR) / INTEREST_RATE_DENOMINATOR;
-            IERC20(tokenA).safeTransfer(msg.sender, collateralToSeize);
         }
 
         loan.borrowedAmount -= repayAmount;
@@ -185,6 +181,15 @@ contract DeFi is ReentrancyGuard{
 
         if (loan.borrowedAmount == 0) {
             delete loans[user];
+        }
+
+        if (loan.loanType == LoanType.TokenA) {
+            IERC20(tokenA).safeTransferFrom(msg.sender, address(this), repayAmount);
+            IERC20(tokenB).safeTransfer(msg.sender, collateralToSeize);
+        } 
+        else {
+            IERC20(tokenB).safeTransferFrom(msg.sender, address(this), repayAmount);
+            IERC20(tokenA).safeTransfer(msg.sender, collateralToSeize);
         }
     }
 
