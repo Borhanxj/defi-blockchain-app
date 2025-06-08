@@ -36,6 +36,9 @@ contract AMM is ReentrancyGuard{
         require(liquidityA == 0 && liquidityB == 0, "Already initialized");
         liquidityA = amountA;
         liquidityB = amountB;
+        uint256 share = amountA + amountB;
+        totalShares = share;
+        lpShares[owner] = share;
     } 
 
     function swap(address tokenIn, uint256 amountIn) external nonReentrant  {
@@ -66,18 +69,11 @@ contract AMM is ReentrancyGuard{
     function addLiquidity(uint256 amountA, uint256 amountB) external nonReentrant  {
         require(liquidityA * amountB == liquidityB * amountA, "Deposit ratio mismatch");
 
-        uint256 prevLiquidityA = liquidityA;
-        uint256 prevLiquidityB = liquidityB;
-
         liquidityA += amountA;
         liquidityB += amountB;
 
         uint256 share;
-        if (totalShares == 0) {
-            share = amountA + amountB;
-        } else {
-            share = ((amountA + amountB) * totalShares) / (prevLiquidityA + prevLiquidityB);
-        }
+        share = amountA + amountB;
 
         lpShares[msg.sender] += share;
         totalShares += share;
@@ -104,31 +100,32 @@ contract AMM is ReentrancyGuard{
         IERC20(tokenB).safeTransfer(msg.sender, amountB);
     }
 
-    function addLiquidityWithOneToken(address tokenIn, uint256 amountIn) external nonReentrant  {
+    function addLiquidityWithOneToken(address tokenIn, uint256 amountIn) external nonReentrant {
         require(tokenIn == tokenA || tokenIn == tokenB, "Invalid token");
+        require(amountIn > 0, "Zero input");
 
-        uint256 liquidityIn = tokenIn == tokenA ? liquidityA : liquidityB;
-        uint256 liquidityOut = tokenIn == tokenA ? liquidityB : liquidityA;
+        uint256 x = tokenIn == tokenA ? liquidityA : liquidityB;
+        uint256 y = tokenIn == tokenA ? liquidityB : liquidityA;
+
+        uint256 swapAmount = (amountIn * y) / (x + y);
+        uint256 remaining = amountIn - swapAmount;
+
+        require(swapAmount > 0 && remaining > 0, "Bad swap ratio");
 
         IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
 
-        uint256 amountInWithFee = (amountIn * FEE_NUMERATOR) / FEE_DENOMINATOR;
-        uint256 amountOut = (liquidityOut * amountInWithFee) / (liquidityIn + amountInWithFee);
-
-        require(amountOut <= liquidityOut, "Not enough liquidity to rebalance");
+        uint256 amountOut = (swapAmount * y) / (x + swapAmount);
+        require(amountOut > 0, "Zero output");
 
         if (tokenIn == tokenA) {
-            liquidityA += amountIn;
+            liquidityA += remaining;
+            liquidityB += amountOut;
         } else {
-            liquidityB += amountIn;
+            liquidityB += remaining;
+            liquidityA += amountOut;
         }
 
-        uint256 liquidityAdded = amountIn + amountOut;
-        uint256 totalLiquidity = liquidityA + liquidityB;
-        uint256 share = (liquidityAdded * totalShares) / totalLiquidity;
-
-        lpShares[msg.sender] += share;
-        totalShares += share;
+        lpShares[msg.sender] += amountIn;
+        totalShares += amountIn;
     }
-
 }
