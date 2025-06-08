@@ -111,11 +111,9 @@ contract DeFi is ReentrancyGuard{
         uint256 amountIntrest = amount * INTEREST_RATE_NUMERATOR / INTEREST_RATE_DENOMINATOR;
 
         if (loan.loanType == LoanType.TokenA) {
-            IERC20(tokenA).safeTransferFrom(msg.sender, address(this), amount+amountIntrest);
             totalTokenAStaked[poolAddress] += amount;
             totalInterestTokenA[poolAddress] += amountIntrest;
         } else {
-            IERC20(tokenB).safeTransferFrom(msg.sender, address(this), amount+amountIntrest);
             totalTokenBStaked[poolAddress] += amount;
             totalInterestTokenB[poolAddress] += amountIntrest;
         }
@@ -125,14 +123,16 @@ contract DeFi is ReentrancyGuard{
         uint256 collateralReturn = (loan.collateralAmount * amount) / previousBorrowedAmount;
         loan.collateralAmount -= collateralReturn;
 
-        if (loan.loanType == LoanType.TokenA) {
-            IERC20(tokenB).safeTransfer(msg.sender, collateralReturn);
-        } else {
-            IERC20(tokenA).safeTransfer(msg.sender, collateralReturn);
-        }
-
         if (loan.borrowedAmount == 0) {
             delete loans[msg.sender];
+        }
+
+        if (loan.loanType == LoanType.TokenA) {
+            IERC20(tokenA).safeTransferFrom(msg.sender, address(this), amount+amountIntrest);
+            IERC20(tokenB).safeTransfer(msg.sender, collateralReturn);
+        } else {
+            IERC20(tokenB).safeTransferFrom(msg.sender, address(this), amount+amountIntrest);
+            IERC20(tokenA).safeTransfer(msg.sender, collateralReturn);
         }
     }
 
