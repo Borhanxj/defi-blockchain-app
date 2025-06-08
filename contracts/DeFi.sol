@@ -47,10 +47,10 @@ contract DeFi is ReentrancyGuard{
         require(loans[msg.sender].borrowedAmount == 0, "Loan already active");
 
         AMM pool = AMM(poolAddress);
-        address tokenA = pool.tokenA();
-        address tokenB = pool.tokenB();
-        uint256 liquidityA = pool.liquidityA();
-        uint256 liquidityB = pool.liquidityB();
+        address tokenA = pool.token0();
+        address tokenB = pool.token1();
+        uint256 liquidityA = pool.liquidity0();
+        uint256 liquidityB = pool.liquidity1();
 
         uint256 collateralValueInA = (liquidityA * collateralAmount) / liquidityB;
 
@@ -74,10 +74,10 @@ contract DeFi is ReentrancyGuard{
         require(loans[msg.sender].borrowedAmount == 0, "Loan already active");
 
         AMM pool = AMM(poolAddress);
-        address tokenA = pool.tokenA();
-        address tokenB = pool.tokenB();
-        uint256 liquidityA = pool.liquidityA();
-        uint256 liquidityB = pool.liquidityB();
+        address tokenA = pool.token0();
+        address tokenB = pool.token1();
+        uint256 liquidityA = pool.liquidity0();
+        uint256 liquidityB = pool.liquidity1();
 
         uint256 collateralValueInB = (liquidityB * collateralAmount) / liquidityA;
 
@@ -104,8 +104,8 @@ contract DeFi is ReentrancyGuard{
         require(amount > 0 && amount <= loan.borrowedAmount, "Invalid repayment amount");
 
         AMM pool = AMM(poolAddress);
-        address tokenA = pool.tokenA();
-        address tokenB = pool.tokenB();
+        address tokenA = pool.token0();
+        address tokenB = pool.token1();
 
         uint256 previousBorrowedAmount = loan.borrowedAmount;
         uint256 amountIntrest = amount * INTEREST_RATE_NUMERATOR / INTEREST_RATE_DENOMINATOR;
@@ -142,8 +142,8 @@ contract DeFi is ReentrancyGuard{
 
         AMM pool = AMM(poolAddress);
         uint256 price = loan.loanType == LoanType.TokenA
-            ? (pool.liquidityA() * 1e18) / pool.liquidityB()
-            : (pool.liquidityB() * 1e18) / pool.liquidityA();
+            ? (pool.liquidity0() * 1e18) / pool.liquidity1()
+            : (pool.liquidity1() * 1e18) / pool.liquidity0();
 
         uint256 collateralValue = loan.loanType == LoanType.TokenA
             ? (loan.collateralAmount * price) / 1e18
@@ -164,8 +164,8 @@ contract DeFi is ReentrancyGuard{
         uint256 collateralToSeize = (loan.collateralAmount * LIQUIDATION_FACTOR_NUMERATOR) / LIQUIDATION_FACTOR_DENOMINATOR;
 
         AMM pool = AMM(poolAddress);
-        address tokenA = pool.tokenA();
-        address tokenB = pool.tokenB();
+        address tokenA = pool.token0();
+        address tokenB = pool.token1();
 
         if (loan.loanType == LoanType.TokenA) {
             totalTokenAStaked[poolAddress] += repayAmount;
@@ -196,7 +196,7 @@ contract DeFi is ReentrancyGuard{
     function lendTokenA(uint256 amount, address poolAddress) external nonReentrant {
         require(amount > 0, "Cannot lend 0");
 
-        address tokenA = AMM(poolAddress).tokenA();
+        address tokenA = AMM(poolAddress).token0();
         totalTokenAStaked[poolAddress] += amount;
 
         shares[msg.sender][poolAddress].tokenA_share += amount;
@@ -206,7 +206,7 @@ contract DeFi is ReentrancyGuard{
     function lendTokenB(uint256 amount, address poolAddress) external nonReentrant {
         require(amount > 0, "Cannot lend 0");
 
-        address tokenB = AMM(poolAddress).tokenB();
+        address tokenB = AMM(poolAddress).token1();
         totalTokenBStaked[poolAddress] += amount;
 
         shares[msg.sender][poolAddress].tokenB_share += amount;
@@ -228,7 +228,7 @@ contract DeFi is ReentrancyGuard{
         totalInterestTokenA[poolAddress] -= userInterest;
         share.tokenA_share = 0;
 
-        address tokenA = AMM(poolAddress).tokenA();
+        address tokenA = AMM(poolAddress).token0();
         IERC20(tokenA).safeTransfer(msg.sender, totalAmount);
     }
 
@@ -247,7 +247,7 @@ contract DeFi is ReentrancyGuard{
         totalInterestTokenB[poolAddress] -= userInterest;
         share.tokenB_share = 0;
 
-        address tokenB = AMM(poolAddress).tokenB();
+        address tokenB = AMM(poolAddress).token1();
         IERC20(tokenB).safeTransfer(msg.sender, totalAmount);
     }
 
