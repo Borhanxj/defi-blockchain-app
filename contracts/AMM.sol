@@ -112,7 +112,7 @@ contract AMM is ReentrancyGuard{
 
         require(swapAmount > 0 && remaining > 0, "Bad swap ratio");
 
-        IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
+        
 
         uint256 amountOut = (swapAmount * y) / (x + swapAmount);
         require(amountOut > 0, "Zero output");
@@ -127,5 +127,7 @@ contract AMM is ReentrancyGuard{
 
         lpShares[msg.sender] += amountIn;
         totalShares += amountIn;
+
+        IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
     }
 }
