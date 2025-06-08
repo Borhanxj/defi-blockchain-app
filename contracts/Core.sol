@@ -9,7 +9,7 @@ contract Core is ReentrancyGuard {
 
     address[] public allPools;
 
-    function createPool(address token0,address token1,uint256 amount0, uint256 amount1) external nonReentrant {
+    function createPool(address token0,address token1,uint256 amount0, uint256 amount1) external nonReentrant returns (address) {
 
         IERC20(token0).safeTransferFrom(msg.sender, address(this), amount0);
         IERC20(token1).safeTransferFrom(msg.sender, address(this), amount1);
@@ -21,5 +21,7 @@ contract Core is ReentrancyGuard {
 
         newPool.initializeLiquidity(amount0, amount1);
         allPools.push(address(newPool));
+
+        return address(newPool);
     }
 }
