@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
 
 import "./AMM.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -20,12 +20,7 @@ contract Core is ReentrancyGuard {
         uint256 timestamp
     );
 
-    function createPool(
-        address token0,
-        address token1,
-        uint256 amount0,
-        uint256 amount1
-    ) external nonReentrant returns (address) {
+    function createPool(address token0, address token1, uint256 amount0, uint256 amount1) external nonReentrant returns (address) {
         IERC20(token0).safeTransferFrom(msg.sender, address(this), amount0);
         IERC20(token1).safeTransferFrom(msg.sender, address(this), amount1);
 
@@ -49,4 +44,9 @@ contract Core is ReentrancyGuard {
 
         return address(newPool);
     }
+
+    function getAllPools() external view returns (address[] memory) {
+        return allPools;
+    }
+
 }
