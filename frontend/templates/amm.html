@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AMM Operations - DeFi Protocol</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+  <script src="static/main.js"></script> <!-- your shared JS -->
+</head>
+<body>
+  <nav style="margin-bottom: 20px;">
+    <a href="/">Pool Generation</a> |
+    <a href="/amm.html">AMM Operations</a> |
+    <a href="/lending">LendingCore</a>
+  </nav>
+
+  <div class="container">
+    
+    <h1>🧪 AMM Core Operations</h1>
+
+    <button id="connectWalletBtn">🔌 Connect Wallet</button>
+    <div id="walletDisplay" class="status-box">Not connected</div>
+
+    <hr />
+
+    <h2>📦 Current Pools</h2>
+    <div id="poolsList"></div>
+    <hr />
+
+    <h2>📊 Check Pool Liquidity by ID</h2>
+    <input type="text" id="liquidityPoolIdInput" class="form-field" placeholder="e.g., pool0" />
+    <button class="action-button" id="checkLiquidityButton">Check Liquidity</button>
+    <pre id="checkLiqOut" class="status-box"></pre>
+
+    <h3>Add Liquidity to Pool</h3>
+    <label for="addLiqInput">Pool ID:</label>
+    <input type="text" id="addLiqInput" placeholder="pool0" size="10" /><br /><br />
+
+    <label>Amount A:</label><br />
+    <input id="liquidityAmountA" placeholder="e.g., 1000000" /><br /><br />
+
+    <label>Amount B:</label><br />
+    <input id="liquidityAmountB" placeholder="e.g., 2000000" /><br /><br />
+
+    <button id="addLiquidityButton">Add Liquidity</button>
+    <pre id="liquidityOutput" class="log-box"></pre>
+
+    <hr />
+
+    <h3>Add One Liquidity to Pool</h3>
+    <label for="addLiqOneInput">Pool ID:</label>
+    <input type="text" id="addLiqOneInput" placeholder="pool0" size="10" /><br /><br />
+
+    <label for="token-add-one-select">Select Token to Add:</label><br />
+    <select id="token-add-one-select">
+      <option value="">--Choose Token to Add--</option>
+      <option value="0x7b44ed2372AE9c366B01f4708B6De973134c0261">TokenA</option>
+      <option value="0x668623cB21331Aa317be4Aa6D75D5F39Bdf34a40">TokenB</option>
+      <option value="0xe3D7BeC83a0cd1cc7705F1bE28379337A8234f69">TokenC</option>
+      <option value="0x6eeA46e5519BBBF1e0999694f89feC1e4537D923">TokenD</option>
+    </select><br /><br />
+
+    <label>Token Address to Add:</label><br />
+    <input id="token-add-oned" size="60" readonly placeholder="0x..." /><br /><br />
+
+    <label>Amount:</label><br />
+    <input id="liquidityAmountOneA" placeholder="e.g., 1000000" /><br /><br />
+
+    <button id="addLiquidityOneButton">Add Liquidity (One Token)</button>
+    <pre id="addLiqOneOutput" class="log-box"></pre>
+
+    <hr />
+
+    <h2>Remove Liquidity</h2>
+    <label for="liquidityRemovePoolIdInput">Pool ID:</label><br />
+    <input type="text" id="liquidityRemovePoolIdInput" placeholder="e.g. pool0" /><br /><br />
+
+    <label for="shareInput">Share to remove:</label><br />
+    <input id="shareInput" min="1" placeholder="Enter share amount" /><br /><br />
+
+    <button id="removeLiquidityBtn">Remove Liquidity</button>
+    <pre id="remLiqOut" class="log-box"></pre>
+
+    <hr />
+
+    <h2>Swap Tokens</h2>
+    <label for="token-select-swap">Select Token to Swap:</label><br />
+    <select id="token-select-swap" onchange="updateTokenAddress('token-select-swap', 'token-swap')">
+      <option value="">--Choose Token to Swap--</option>
+      <option value="0x7b44ed2372AE9c366B01f4708B6De973134c0261">TokenA</option>
+      <option value="0x668623cB21331Aa317be4Aa6D75D5F39Bdf34a40">TokenB</option>
+      <option value="0xe3D7BeC83a0cd1cc7705F1bE28379337A8234f69">TokenC</option>
+      <option value="0x6eeA46e5519BBBF1e0999694f89feC1e4537D923">TokenD</option>
+    </select><br /><br />
+
+    <label>Token Address to Swap:</label><br />
+    <input id="token-swap" size="60" readonly placeholder="0x..." /><br /><br />
+
+    <label for="amountInInput">Amount In:</label>
+    <input type="number" id="amountInInput" min="1" /><br /><br />
+
+    <label for="swapPoolIdInput">Pool ID:</label>
+    <input type="text" id="swapPoolIdInput" placeholder="pool0" size="10" /><br /><br />
+
+    <button id="swapBtn">Swap</button>
+    <pre id="swapOutput" class="log-box"></pre>
+
+    <hr />
+
+    <h2>Read My Shares in Pool</h2>
+    <label for="mySharePoolIdInput">Pool ID:</label><br />
+    <input type="text" id="mySharePoolIdInput" placeholder="e.g. pool0" /><br /><br />
+
+    <button id="mySharesPoolBtn">Read My Share</button>
+    <button id="readTotalSharesBtn">Read Total Shares</button>
+    <pre id="sharePoolOut" class="log-box"></pre>
+
+    <hr />
+  </div>
+</body>
+</html>

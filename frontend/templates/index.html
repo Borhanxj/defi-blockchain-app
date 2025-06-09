@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DeFi Pool Generator</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div class="container">
+    <nav style="margin-bottom: 20px;">
+      <a href="/">Pool Generation</a> |
+      <a href="/amm.html">AMM Operations</a> |
+      <a href="/lending">LendingCore</a>
+      </nav>
+    <h1>🧪 Pool Generation Dashboard</h1>
+
+    <button id="connectWalletBtn">🔌 Connect Wallet</button>
+    <div id="walletDisplay" class="status-box">Not connected</div>
+
+    <hr />
+
+    <h2>Create New Pool</h2>
+    <label for="tokenA">Token A</label>
+    <select id="tokenA">
+      <option value="">-- Select Token A --</option>
+      <option value="0x7b44ed2372AE9c366B01f4708B6De973134c0261">TokenA</option>
+  <option value="0x668623cB21331Aa317be4Aa6D75D5F39Bdf34a40">TokenB</option>
+  <option value="0xe3D7BeC83a0cd1cc7705F1bE28379337A8234f69">TokenC</option>
+  <option value="0x6eeA46e5519BBBF1e0999694f89feC1e4537D923">TokenD</option>
+      
+    </select>
+
+    <label for="amountA">Amount A</label>
+    <input id="amountA" placeholder="e.g., 1000000000000000000">
+
+    <label for="tokenB">Token B</label>
+    <select id="tokenB">
+      <option value="">-- Select Token B --</option>
+      <option value="0x7b44ed2372AE9c366B01f4708B6De973134c0261">TokenA</option>
+        <option value="0x668623cB21331Aa317be4Aa6D75D5F39Bdf34a40">TokenB</option>
+        <option value="0xe3D7BeC83a0cd1cc7705F1bE28379337A8234f69">TokenC</option>
+        <option value="0x6eeA46e5519BBBF1e0999694f89feC1e4537D923">TokenD</option>
+    </select>
+
+    <label for="amountB">Amount B</label>
+    <input id="amountB" placeholder="e.g., 500000000000000000">
+
+    <button id="createPoolBtn">🚀 Create Pool</button>
+
+    <div id="output" class="status-box"></div>
+
+    <hr />
+
+    <h2>📦 Created Pools</h2>
+    <div id="poolsList"></div>
+
+    <hr />
+    <h2>🔓 Approve Token A & B for Pool</h2>
+    <input type="text" id="approvePoolInput" class="form-field" placeholder="e.g., pool0" />
+    <button class="action-button" onclick="approveTokensForPool()">Approve Tokens</button>
+    <pre id="approveLog" class="status-box"></pre>
+
+    <h2>🔓 Approve Token A & B for DefiCore</h2>
+    <label for="tokenAlend">Token A</label>
+    <select id="tokenAlend">
+      <option value="">-- Select Token A --</option>
+      <option value="0x7b44ed2372AE9c366B01f4708B6De973134c0261">TokenA</option>
+    <option value="0x668623cB21331Aa317be4Aa6D75D5F39Bdf34a40">TokenB</option>
+    <option value="0xe3D7BeC83a0cd1cc7705F1bE28379337A8234f69">TokenC</option>
+    <option value="0x6eeA46e5519BBBF1e0999694f89feC1e4537D923">TokenD</option>
+  </select>
+    <label for="tokenBlend">Token B</label>
+    <select id="tokenBlend">
+      <option value="">-- Select Token B --</option>
+      <option value="0x7b44ed2372AE9c366B01f4708B6De973134c0261">TokenA</option>
+        <option value="0x668623cB21331Aa317be4Aa6D75D5F39Bdf34a40">TokenB</option>
+        <option value="0xe3D7BeC83a0cd1cc7705F1bE28379337A8234f69">TokenC</option>
+        <option value="0x6eeA46e5519BBBF1e0999694f89feC1e4537D923">TokenD</option>
+    </select>
+    <button class="action-button" onclick="approveTokensForDefiCore()">Approve Tokens</button>
+    <pre id="approveDefiLog" class="status-box"></pre>
+
+    <h2>🔓 Approve Token A & B for LendingCore</h2>
+    <input type="text" id="approveLendingInput" class="form-field" placeholder="e.g., pool0" />
+    <button class="action-button" onclick="approveTokensForLendingCore()">Approve Tokens</button>
+    <pre id="approveLendingLog" class="status-box"></pre>
+
+    <hr />
+    <h2>📊 Check Pool Liquidity by ID</h2>
+    <input type="text" id="liquidityPoolIdInput" class="form-field" placeholder="e.g., pool0" />
+    <button class="action-button" id="checkLiquidityButton">Check Liquidity</button>
+    <pre id="checkLiqOut" class="status-box"></pre>
+
+    <h2>📬 Check Pool Token Address by ID</h2>
+    <input type="text" id="addressPoolIdInput" class="form-field" placeholder="e.g., pool0" />
+    <button class="action-button" id="checkPoolTokenButton">Check Token Addresses</button>
+    <pre id="poolTokenNumOutAddr" class="status-box"></pre>
+
+    <hr />
+    <h2>🪙 Mint ERC-20 Tokens to User</h2>
+
+    <label for="mintTokenAddress">Token Contract</label>
+    <select id="mintTokenAddress" class="form-field">
+      <option value="">-- Select Token --</option>
+      <option value="0x7b44ed2372AE9c366B01f4708B6De973134c0261">TokenA</option>
+      <option value="0x668623cB21331Aa317be4Aa6D75D5F39Bdf34a40">TokenB</option>
+      <option value="0xe3D7BeC83a0cd1cc7705F1bE28379337A8234f69">TokenC</option>
+      <option value="0x6eeA46e5519BBBF1e0999694f89feC1e4537D923">TokenD</option>
+    </select>
+
+    <label for="spenderAddress">Recipient Address</label>
+    <input type="text" id="spenderAddress" class="form-field" placeholder="0x..." />
+
+    <label for="mintAmount">Amount to Mint</label>
+    <input type="text" id="mintAmount" class="form-field" placeholder="e.g., 1000000" />
+
+    <button class="action-button" id="mintButton">Mint Token</button>
+    <pre id="mintOutput" class="status-box"></pre>
+
+    <h3>🔎 Find Best AMM Pool</h3>
+
+<label for="tokenToSwapSelect">Token to Swap:</label>
+<select id="tokenToSwapSelect">
+  <option value="">-- Choose Token --</option>
+  <option value="0x7b44ed2372AE9c366B01f4708B6De973134c0261">TokenA</option>
+  <option value="0x668623cB21331Aa317be4Aa6D75D5F39Bdf34a40">TokenB</option>
+  <option value="0xe3D7BeC83a0cd1cc7705F1bE28379337A8234f69">TokenC</option>
+  <option value="0x6eeA46e5519BBBF1e0999694f89feC1e4537D923">TokenD</option>
+  <!-- Add real addresses -->
+</select><br /><br />
+
+<label for="tokenFromSwapSelect">Token to Receive:</label>
+<select id="tokenFromSwapSelect">
+  <option value="">-- Choose Token --</option>
+  <option value="0x7b44ed2372AE9c366B01f4708B6De973134c0261">TokenA</option>
+  <option value="0x668623cB21331Aa317be4Aa6D75D5F39Bdf34a40">TokenB</option>
+  <option value="0xe3D7BeC83a0cd1cc7705F1bE28379337A8234f69">TokenC</option>
+  <option value="0x6eeA46e5519BBBF1e0999694f89feC1e4537D923">TokenD</option>
+</select><br /><br />
+
+<label for="amountToSwapInput">Amount to Swap:</label>
+<input id="amountToSwapInput" placeholder="e.g., 1000000" /><br /><br />
+
+<button onclick="findBestPoolHandler()">Find Best Pool</button>
+<pre id="bestPoolOutput" class="log-box"></pre>
+
+    
+  </div>
+
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>

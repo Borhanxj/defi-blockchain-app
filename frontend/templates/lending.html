@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LendingCore - DeFi Protocol</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+  <script src="static/main.js"></script> <!-- your shared JS -->
+</head>
+<body>
+  <nav style="margin-bottom: 20px;">
+    <a href="/">Pool Generation</a> |
+    <a href="/amm.html">AMM Operations</a> |
+    <a href="/lending">LendingCore</a>
+  </nav>
+
+  <div class="container">
+    <h1>💰 LendingCore Interface</h1>
+
+    <button id="connectWalletBtn">🔌 Connect Wallet</button>
+    <div id="walletDisplay" class="status-box">Not connected</div>
+    
+
+    <h2>📦 Current Pools</h2>
+    <div id="poolsList"></div>
+    <hr />
+
+    <h2>Lending</h2>
+
+    <h3>📥 Lend Token A</h3>
+    <input placeholder="Pool ID (e.g., pool0)" id="lendTokenApoolID" />
+    <input placeholder="Amount A" id="amountALend" />
+    <button id="lendAButton">Lend Token A</button>
+
+    <pre id="lendResultA" class="log-box"></pre>
+
+    <h3>📥 Lend Token B</h3>
+    <input placeholder="Pool ID (e.g., pool0)" id="lendTokenBpoolID" />
+    <input placeholder="Amount B" id="amountB" />
+    <button id="lendBButton">Lend Token B</button>
+
+    <pre id="lendResultB" class="log-box"></pre>
+
+    <hr />
+
+    <h2>Borrowing</h2>
+
+    <h3>📤 Borrow Token A</h3>
+    <input id="collateralAmountA" placeholder="Collateral" />
+    <input id="borrowAmountA" placeholder="Borrow Amount" />
+    <input id="borrowAPoolIdInput" placeholder="Pool ID" />
+    <button id="borrowTokenAButton">Borrow Token A</button>
+    <pre id="statusABorrow" class="log-box"></pre>
+
+    <h3>📤 Borrow Token B</h3>
+    <input id="collateralAmountB" placeholder="Collateral" />
+    <input id="borrowAmountB" placeholder="Borrow Amount" />
+    <input id="borrowBPoolIdInput" placeholder="Pool ID" />
+    <button id="borrowTokenBButton">Borrow Token B</button>
+    <pre id="statusB" class="log-box"></pre>
+
+    <hr />
+
+    <h2>Repayment & Withdrawal</h2>
+
+    <h3>💸 Repay Loan</h3>
+    <input id="repayPoolAddressIdInput" placeholder="Pool ID" />
+    <input id="repayAmountInput" placeholder="Amount" />
+    <button id="repayLoanButton">Repay Loan</button>
+    <pre id="repayStatusMessage" class="log-box"></pre>
+
+    <h3>🏦 Withdraw Token A</h3>
+    <input id="withdrawPoolAddressIdInputA" placeholder="Pool ID" />
+    <button id="withdrawTokenAButton">Withdraw Token A</button>
+    <pre id="withdrawStatusMessageA" class="log-box"></pre>
+
+    <h3>🏦 Withdraw Token B</h3>
+    <input id="withdrawPoolAddressIdInputB" placeholder="Pool ID" />
+    <button id="withdrawTokenBButton">Withdraw Token A</button>
+    <pre id="withdrawStatusMessageB" class="log-box"></pre>
+
+    <hr />
+
+    <h2>Health & Liquidation</h2>
+
+    <h3>💀 Liquidate User</h3>
+    <input id="userAddressLiqui" placeholder="User address" />
+    <input id="poolAddressLiquiPoolIdInput" placeholder="Pool ID" />
+    <button id="liquidateUserButton">Liquidate User</button>
+    <pre id="logLiquidation" class="log-box"></pre>
+
+    <h3>❤️ Check Health Factor</h3>
+    <input id="healthUserAddressInput" placeholder="User address" />
+    <input id="healthPoolAddressIdInput" placeholder="Pool ID" />
+    <button id="checkHealthButton">Check HF</button>
+    <pre id="healthFactorStatusMessage" class="log-box"></pre>
+
+    <hr />
+
+    <h2>Insights</h2>
+
+    <h3>📊 Loan Info</h3>
+    <input id="loanAddressInput" placeholder="User address" />
+    <button id="checkLoanBtn">Read Loan</button>
+    <pre id="loanOutput" class="log-box"></pre>
+
+    <h3>📦 Share Info</h3>
+    <input id="shareUserAddress" placeholder="User address" />
+    <input id="sharePoolId" placeholder="Pool ID" />
+    <button id="checkShareInfoBtn">Read Loan</button>
+    <pre id="shareResult" class="log-box"></pre>
+
+    <h3>📈 Pool Lending Stats</h3>
+    <input id="statsPoolId" placeholder="Pool ID" />
+    <button id="readPoolInfoButton">Read Stats</button>
+    <pre id="poolStatsOutput" class="log-box"></pre>
+
+    <h3>📈 Interest Rate Stats</h3>
+
+  </div>
+</body>
+</html>
