@@ -49,4 +49,27 @@ contract Core is ReentrancyGuard {
         return allPools;
     }
 
+    function bestPool(address tokenToSwapp, address tokenFromSwapp, uint256 amountToSwap) public view returns (address bestAMM) {
+        address[] memory pools = allPools;
+        uint256 bestAmountOut = 0;
+
+        for (uint256 i = 0; i < pools.length; i++) {
+            AMM pool = AMM(pools[i]);
+            address tokenA = pool.token0();
+            address tokenB = pool.token1();
+
+            if ((tokenToSwapp == tokenA && tokenFromSwapp == tokenB) || (tokenToSwapp == tokenB && tokenFromSwapp == tokenA)) {
+                uint256 liquidityIn = tokenToSwapp == tokenA ? pool.liquidity0() : pool.liquidity1();
+                uint256 liquidityOut = tokenToSwapp == tokenA ? pool.liquidity1() : pool.liquidity0();
+
+                uint256 amountInWithFee = (amountToSwap * 997) / 1000;
+                uint256 amountOut = (liquidityOut * amountInWithFee) / (liquidityIn + amountInWithFee);
+
+                if (amountOut > bestAmountOut) {
+                    bestAmountOut = amountOut;
+                    bestAMM = pools[i];
+                }
+            }
+        }
+    }
 }
