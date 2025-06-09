@@ -19,7 +19,7 @@ contract DeFi is ReentrancyGuard {
         uint256 tokenB_share;
     }
 
-    mapping(address => Loan) public loans;
+    mapping(address => mapping(address => Loan)) public loans;
     mapping(address => mapping(address => Share)) public shares;
     
     mapping(address => uint256) public totalTokenAStaked;
@@ -52,7 +52,7 @@ contract DeFi is ReentrancyGuard {
     event InterestAccrued(address indexed pool, address indexed token, uint256 interestAmount);
 
     function borrowTokenA(uint256 collateralAmount, uint256 borrowAmount, address poolAddress) external nonReentrant {
-        require(loans[msg.sender].borrowedAmount == 0, "Loan already active");
+        require(loans[msg.sender][poolAddress].borrowedAmount == 0, "Loan already active");
 
         AMM pool = AMM(poolAddress);
         address tokenA = pool.token0();
@@ -65,7 +65,7 @@ contract DeFi is ReentrancyGuard {
         require(collateralValueInA * 100 >= borrowAmount * 150, "Insufficient collateral: min 150% required");
         require(totalTokenAStaked[poolAddress] >= borrowAmount, "Insufficient TokenA liquidity");
 
-        loans[msg.sender] = Loan({
+        loans[msg.sender][poolAddress] = Loan({
             collateralAmount: collateralAmount,
             borrowedAmount: borrowAmount,
             loanType: LoanType.TokenA
@@ -82,7 +82,7 @@ contract DeFi is ReentrancyGuard {
     }
 
     function borrowTokenB(uint256 collateralAmount, uint256 borrowAmount, address poolAddress) external nonReentrant {
-        require(loans[msg.sender].borrowedAmount == 0, "Loan already active");
+        require(loans[msg.sender][poolAddress].borrowedAmount == 0, "Loan already active");
 
         AMM pool = AMM(poolAddress);
         address tokenA = pool.token0();
@@ -95,7 +95,7 @@ contract DeFi is ReentrancyGuard {
         require(collateralValueInB * 100 >= borrowAmount * 150, "Insufficient collateral: min 150% required");
         require(totalTokenBStaked[poolAddress] >= borrowAmount, "Insufficient TokenB liquidity");
 
-        loans[msg.sender] = Loan({
+        loans[msg.sender][poolAddress] = Loan({
             collateralAmount: collateralAmount,
             borrowedAmount: borrowAmount,
             loanType: LoanType.TokenB
@@ -112,7 +112,7 @@ contract DeFi is ReentrancyGuard {
     }
 
     function repayLoan(address poolAddress, uint256 amount) external nonReentrant {
-        Loan storage loan = loans[msg.sender];
+        Loan storage loan = loans[msg.sender][poolAddress];
         require(loan.borrowedAmount > 0, "No active loan");
         require(amount > 0 && amount <= loan.borrowedAmount, "Invalid repayment amount");
 
@@ -139,7 +139,7 @@ contract DeFi is ReentrancyGuard {
         loan.collateralAmount -= collateralReturn;
 
         if (loan.borrowedAmount == 0) {
-            delete loans[msg.sender];
+            delete loans[msg.sender][poolAddress];
         }
 
         if (loan.loanType == LoanType.TokenA) {
@@ -160,7 +160,7 @@ contract DeFi is ReentrancyGuard {
     }
 
     function getHealthFactor(address user, address poolAddress) public view returns (uint256) {
-        Loan memory loan = loans[user];
+        Loan memory loan = loans[user][poolAddress];
         if (loan.borrowedAmount == 0) return type(uint256).max;
 
         AMM pool = AMM(poolAddress);
@@ -177,7 +177,7 @@ contract DeFi is ReentrancyGuard {
     }
 
     function liquidate(address user, address poolAddress) external nonReentrant {
-        Loan storage loan = loans[user];
+        Loan storage loan = loans[user][poolAddress];
         require(loan.borrowedAmount > 0, "No active loan");
 
         uint256 healthFactor = getHealthFactor(user, poolAddress);
@@ -207,7 +207,7 @@ contract DeFi is ReentrancyGuard {
         loan.collateralAmount -= collateralToSeize;
 
         if (loan.borrowedAmount == 0) {
-            delete loans[user];
+            delete loans[msg.sender][poolAddress];
         }
 
         if (loan.loanType == LoanType.TokenA) {
