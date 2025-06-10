@@ -11,7 +11,8 @@
     <nav style="margin-bottom: 20px;">
       <a href="/">Pool Generation</a> |
       <a href="/amm.html">AMM Operations</a> |
-      <a href="/lending">LendingCore</a>
+      <a href="/lending">LendingCore</a> |
+      <a href="/arbitraguer">Arbitrauger</a>
       </nav>
     <h1>🧪 Pool Generation Dashboard</h1>
 
@@ -24,10 +25,10 @@
     <label for="tokenA">Token A</label>
     <select id="tokenA">
       <option value="">-- Select Token A --</option>
-      <option value="0x7b44ed2372AE9c366B01f4708B6De973134c0261">TokenA</option>
-  <option value="0x668623cB21331Aa317be4Aa6D75D5F39Bdf34a40">TokenB</option>
-  <option value="0xe3D7BeC83a0cd1cc7705F1bE28379337A8234f69">TokenC</option>
-  <option value="0x6eeA46e5519BBBF1e0999694f89feC1e4537D923">TokenD</option>
+      <option value="0x8C7c15E95D4cBF07386973BCc596328E64886623">TokenA</option>
+  <option value="0x92572C68e39e19Ce505c1cA3e46190bb8c3a53a8">TokenB</option>
+  <option value="0x7213536212D2DD4F92d74A5EEC1Cd07abC234480">TokenC</option>
+  <option value="0x5012BE72B96b12377521fBDCa2fEfB38Cd25eD75">TokenD</option>
       
     </select>
 
@@ -37,10 +38,10 @@
     <label for="tokenB">Token B</label>
     <select id="tokenB">
       <option value="">-- Select Token B --</option>
-      <option value="0x7b44ed2372AE9c366B01f4708B6De973134c0261">TokenA</option>
-        <option value="0x668623cB21331Aa317be4Aa6D75D5F39Bdf34a40">TokenB</option>
-        <option value="0xe3D7BeC83a0cd1cc7705F1bE28379337A8234f69">TokenC</option>
-        <option value="0x6eeA46e5519BBBF1e0999694f89feC1e4537D923">TokenD</option>
+      <option value="0x8C7c15E95D4cBF07386973BCc596328E64886623">TokenA</option>
+        <option value="0x92572C68e39e19Ce505c1cA3e46190bb8c3a53a8">TokenB</option>
+        <option value="0x7213536212D2DD4F92d74A5EEC1Cd07abC234480">TokenC</option>
+        <option value="0x5012BE72B96b12377521fBDCa2fEfB38Cd25eD75">TokenD</option>
     </select>
 
     <label for="amountB">Amount B</label>
@@ -65,21 +66,41 @@
     <label for="tokenAlend">Token A</label>
     <select id="tokenAlend">
       <option value="">-- Select Token A --</option>
-      <option value="0x7b44ed2372AE9c366B01f4708B6De973134c0261">TokenA</option>
-    <option value="0x668623cB21331Aa317be4Aa6D75D5F39Bdf34a40">TokenB</option>
-    <option value="0xe3D7BeC83a0cd1cc7705F1bE28379337A8234f69">TokenC</option>
-    <option value="0x6eeA46e5519BBBF1e0999694f89feC1e4537D923">TokenD</option>
+      <option value="0x8C7c15E95D4cBF07386973BCc596328E64886623">TokenA</option>
+    <option value="0x92572C68e39e19Ce505c1cA3e46190bb8c3a53a8">TokenB</option>
+    <option value="0x7213536212D2DD4F92d74A5EEC1Cd07abC234480">TokenC</option>
+    <option value="0x5012BE72B96b12377521fBDCa2fEfB38Cd25eD75">TokenD</option>
   </select>
     <label for="tokenBlend">Token B</label>
     <select id="tokenBlend">
       <option value="">-- Select Token B --</option>
-      <option value="0x7b44ed2372AE9c366B01f4708B6De973134c0261">TokenA</option>
-        <option value="0x668623cB21331Aa317be4Aa6D75D5F39Bdf34a40">TokenB</option>
-        <option value="0xe3D7BeC83a0cd1cc7705F1bE28379337A8234f69">TokenC</option>
-        <option value="0x6eeA46e5519BBBF1e0999694f89feC1e4537D923">TokenD</option>
+      <option value="0x8C7c15E95D4cBF07386973BCc596328E64886623">TokenA</option>
+        <option value="0x92572C68e39e19Ce505c1cA3e46190bb8c3a53a8">TokenB</option>
+        <option value="0x7213536212D2DD4F92d74A5EEC1Cd07abC234480">TokenC</option>
+        <option value="0x5012BE72B96b12377521fBDCa2fEfB38Cd25eD75">TokenD</option>
     </select>
     <button class="action-button" onclick="approveTokensForDefiCore()">Approve Tokens</button>
     <pre id="approveDefiLog" class="status-box"></pre>
+
+    <h2>🔓 Approve Token A & B for Arbitraguer</h2>
+    <label for="tokenAarbitr">Token A</label>
+    <select id="tokenAarbitr">
+      <option value="">-- Select Token A --</option>
+      <option value="0x8C7c15E95D4cBF07386973BCc596328E64886623">TokenA</option>
+    <option value="0x92572C68e39e19Ce505c1cA3e46190bb8c3a53a8">TokenB</option>
+    <option value="0x7213536212D2DD4F92d74A5EEC1Cd07abC234480">TokenC</option>
+    <option value="0x5012BE72B96b12377521fBDCa2fEfB38Cd25eD75">TokenD</option>
+  </select>
+    <label for="tokenBarbitr">Token B</label>
+    <select id="tokenBarbitr">
+      <option value="">-- Select Token B --</option>
+      <option value="0x8C7c15E95D4cBF07386973BCc596328E64886623">TokenA</option>
+        <option value="0x92572C68e39e19Ce505c1cA3e46190bb8c3a53a8">TokenB</option>
+        <option value="0x7213536212D2DD4F92d74A5EEC1Cd07abC234480">TokenC</option>
+        <option value="0x5012BE72B96b12377521fBDCa2fEfB38Cd25eD75">TokenD</option>
+    </select>
+    <button class="action-button" onclick="approveTokensForArbitr()">Approve Tokens</button>
+    <pre id="approveArbitrLog" class="status-box"></pre>
 
     <h2>🔓 Approve Token A & B for LendingCore</h2>
     <input type="text" id="approveLendingInput" class="form-field" placeholder="e.g., pool0" />
@@ -103,10 +124,10 @@
     <label for="mintTokenAddress">Token Contract</label>
     <select id="mintTokenAddress" class="form-field">
       <option value="">-- Select Token --</option>
-      <option value="0x7b44ed2372AE9c366B01f4708B6De973134c0261">TokenA</option>
-      <option value="0x668623cB21331Aa317be4Aa6D75D5F39Bdf34a40">TokenB</option>
-      <option value="0xe3D7BeC83a0cd1cc7705F1bE28379337A8234f69">TokenC</option>
-      <option value="0x6eeA46e5519BBBF1e0999694f89feC1e4537D923">TokenD</option>
+      <option value="0x8C7c15E95D4cBF07386973BCc596328E64886623">TokenA</option>
+      <option value="0x92572C68e39e19Ce505c1cA3e46190bb8c3a53a8">TokenB</option>
+      <option value="0x7213536212D2DD4F92d74A5EEC1Cd07abC234480">TokenC</option>
+      <option value="0x5012BE72B96b12377521fBDCa2fEfB38Cd25eD75">TokenD</option>
     </select>
 
     <label for="spenderAddress">Recipient Address</label>
@@ -123,20 +144,20 @@
 <label for="tokenToSwapSelect">Token to Swap:</label>
 <select id="tokenToSwapSelect">
   <option value="">-- Choose Token --</option>
-  <option value="0x7b44ed2372AE9c366B01f4708B6De973134c0261">TokenA</option>
-  <option value="0x668623cB21331Aa317be4Aa6D75D5F39Bdf34a40">TokenB</option>
-  <option value="0xe3D7BeC83a0cd1cc7705F1bE28379337A8234f69">TokenC</option>
-  <option value="0x6eeA46e5519BBBF1e0999694f89feC1e4537D923">TokenD</option>
+  <option value="0x8C7c15E95D4cBF07386973BCc596328E64886623">TokenA</option>
+  <option value="0x92572C68e39e19Ce505c1cA3e46190bb8c3a53a8">TokenB</option>
+  <option value="0x7213536212D2DD4F92d74A5EEC1Cd07abC234480">TokenC</option>
+  <option value="0x5012BE72B96b12377521fBDCa2fEfB38Cd25eD75">TokenD</option>
   <!-- Add real addresses -->
 </select><br /><br />
 
 <label for="tokenFromSwapSelect">Token to Receive:</label>
 <select id="tokenFromSwapSelect">
   <option value="">-- Choose Token --</option>
-  <option value="0x7b44ed2372AE9c366B01f4708B6De973134c0261">TokenA</option>
-  <option value="0x668623cB21331Aa317be4Aa6D75D5F39Bdf34a40">TokenB</option>
-  <option value="0xe3D7BeC83a0cd1cc7705F1bE28379337A8234f69">TokenC</option>
-  <option value="0x6eeA46e5519BBBF1e0999694f89feC1e4537D923">TokenD</option>
+  <option value="0x8C7c15E95D4cBF07386973BCc596328E64886623">TokenA</option>
+  <option value="0x92572C68e39e19Ce505c1cA3e46190bb8c3a53a8">TokenB</option>
+  <option value="0x7213536212D2DD4F92d74A5EEC1Cd07abC234480">TokenC</option>
+  <option value="0x5012BE72B96b12377521fBDCa2fEfB38Cd25eD75">TokenD</option>
 </select><br /><br />
 
 <label for="amountToSwapInput">Amount to Swap:</label>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AMM Operations - DeFi Protocol</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+  <script src="static/main.js"></script> <!-- your shared JS -->
+</head>
+<body>
+  <nav style="margin-bottom: 20px;">
+    <a href="/">Pool Generation</a> |
+    <a href="/amm.html">AMM Operations</a> |
+    <a href="/lending">LendingCore</a> |
+    <a href="/arbitraguer">Arbitrauger</a>
+  </nav>
+
+  <div class="container">
+    
+    <h1>🧪 Arbitraguer Operations</h1>
+
+    <button id="connectWalletBtn">🔌 Connect Wallet</button>
+    <div id="walletDisplay" class="status-box">Not connected</div>
+
+    <hr />
+
+    <h2>📦 Current Pools</h2>
+    <div id="poolsList"></div>
+    <hr />
+
+    <h2>Arbitrage Functions</h2>
+
+<!-- FIND BEST ARBITRAGE -->
+<h3>Find Best Arbitrage</h3>
+<label for="token-find-select">Select Base Token:</label><br />
+<select id="token-find-select">
+  <option value="">--Choose Token--</option>
+  <option value="0x8C7c15E95D4cBF07386973BCc596328E64886623">TokenA</option>
+  <option value="0x92572C68e39e19Ce505c1cA3e46190bb8c3a53a8">TokenB</option>
+  <option value="0x7213536212D2DD4F92d74A5EEC1Cd07abC234480">TokenC</option>
+  <option value="0x5012BE72B96b12377521fBDCa2fEfB38Cd25eD75">TokenD</option>
+</select><br />
+
+<label for="amountInFind">Amount In:</label>
+<input type="text" id="amountInFind" placeholder="Amount in wei"><br>
+<button onclick="findBestArbitrage()">Find Best Arbitrage</button>
+<pre id="findBestArbitrageOutput"></pre>
+
+<hr>
+
+<!-- EXECUTE ARBITRAGE -->
+<h3>Execute Arbitrage</h3>
+<label for="token-exec-select">Select Base Token:</label><br />
+<select id="token-exec-select">
+  <option value="">--Choose Token--</option>
+  <option value="0x8C7c15E95D4cBF07386973BCc596328E64886623">TokenA</option>
+  <option value="0x92572C68e39e19Ce505c1cA3e46190bb8c3a53a8">TokenB</option>
+  <option value="0x7213536212D2DD4F92d74A5EEC1Cd07abC234480">TokenC</option>
+  <option value="0x5012BE72B96b12377521fBDCa2fEfB38Cd25eD75">TokenD</option>
+</select><br />
+
+<label for="amountInExec">Amount In:</label>
+<input type="text" id="amountInExec" placeholder="Amount in wei"><br>
+<button onclick="executeArbitrage()">Execute Arbitrage</button>
+
+<pre id="arbitrageOutput"></pre>
+
+<h3>Read Best Arbitrage Path</h3>
+<button onclick="readBestPath()">Read Best Path</button>
+<pre id="bestPathOutput"></pre>
+   
+
+    <hr />
+  </div>
+</body>
+</html>
