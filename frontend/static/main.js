@@ -3,9 +3,9 @@ let web3;
 let userAccount;
 
 // Contract addresses (update as needed)
-const defiCoreAddress = "0x8251019C81f3618ccdb574BEB846c4284D313BDA";
-const lendingCoreAddress = "0x7596c08ffc29C602F78cAF2e5667e5182f86b555"; // Replace with actual address
-const arbitrAddress = "0xBAFA987DDAcB945cA93acf63043e2C3Df8EFC986"
+const defiCoreAddress = "0x3A41542c477daE9829D70FA27a5dd5c999FcEd30";
+const lendingCoreAddress = "0x53e88a8CD8195f80CCAA2DEb2ce96E292935F580"; // Replace with actual address
+const arbitrAddress = "0xE9CC5564a25c1839720a111589081b9ED36153E9"
 
 // Pools & Tokens in memory
 const pools = [];
@@ -13,11 +13,12 @@ const poolTokens = [];
 
 // Token label map (all lowercase)
 const tokenMap = {
-  "0x7b44ed2372ae9c366b01f4708b6de973134c0261": "TokenA",
-  "0x668623cb21331aa317be4aa6d75d5f39bdf34a40": "TokenB",
-  "0xe3d7bec83a0cd1cc7705f1be28379337a8234f69": "TokenC",
-  "0x6eea46e5519bbbf1e0999694f89fec1e4537d923": "TokenD"
+  "0x8c7c15e95d4cbf07386973bcc596328e64886623": "TokenA",
+  "0x92572c68e39e19ce505c1ca3e46190bb8c3a53a8": "TokenB",
+  "0x7213536212d2dd4f92d74a5eec1cd07abc234480": "TokenC",
+  "0x5012be72b96b12377521fbdca2fefb38cd25ed75": "TokenD"
 };
+
 
 // Load pools from localStorage (if exists)
 function loadPools() {
@@ -316,6 +317,35 @@ async function approveTokensForDefiCore() {
     if (output) output.textContent = "✅ Tokens approved for DefiCore.";
   } catch (err) {
     console.error("❌ Error approving for DefiCore:", err);
+    if (output) output.textContent = "❌ Error: " + err.message;
+  }
+}
+
+
+// Approve tokens for DefiCore
+async function approveTokensForArbitr() {
+  const tokenAddressA = document.getElementById("tokenAarbitr")?.value.trim();
+  const tokenAddressB = document.getElementById("tokenBarbitr")?.value.trim();
+  const output = document.getElementById("approveArbitrLog");
+  if (output) output.textContent = "";
+
+  console.log("🔍 Approve Arbitrageur - Token A:", tokenAddressA);
+  console.log("🔍 Approve Arbitrageur - Token B:", tokenAddressB);
+
+  if (!web3 || !userAccount) {
+    if (output) output.textContent = "❌ Connect wallet first.";
+    console.log("❌ Web3 or userAccount not available");
+    return;
+  }
+
+  try {
+    await approveToken(tokenAddressA, defiCoreAddress);
+    await approveToken(tokenAddressB, defiCoreAddress);
+
+    console.log("✅ Tokens approved for DefiCore");
+    if (output) output.textContent = "✅ Tokens approved for Arbitraguer.";
+  } catch (err) {
+    console.error("❌ Error approving for Arbitrauger:", err);
     if (output) output.textContent = "❌ Error: " + err.message;
   }
 }
@@ -1276,6 +1306,116 @@ async function addLiquidity() {
       output.textContent = "❌ Error: " + err.message;
     }
   }
+
+  async function findBestArbitrage() {
+    const output = document.getElementById("findBestArbitrageOutput");
+    output.textContent = "";
   
+    const baseToken = document.getElementById("token-find-select").value.trim();
+    const amountIn = document.getElementById("amountInFind").value.trim();
   
+    if (!baseToken || !amountIn) {
+      output.textContent = "❌ Please select a token and enter an amount.";
+      return;
+    }
+  
+    if (!web3 || !userAccount) {
+      output.textContent = "❌ Connect wallet first.";
+      return;
+    }
+  
+    try {
+      const selector = web3.utils.sha3("findBestArbitrage(address,uint256)").substring(0, 10);
+      const params = web3.eth.abi.encodeParameters(["address", "uint256"], [baseToken, amountIn]).substring(2);
+      const calldata = selector + params;
+  
+      const tx = {
+        from: userAccount,
+        to: arbitrAddress,
+        data: calldata
+      };
+  
+      output.textContent = "🔍 Sending findBestArbitrage...";
+      const receipt = await web3.eth.sendTransaction(tx);
+      output.textContent = `✅ Best path search complete. Tx Hash: ${receipt.transactionHash}`;
+    } catch (err) {
+      output.textContent = "❌ Error: " + (err.message || err);
+    }
+  }
+  
+  async function executeArbitrage() {
+    const output = document.getElementById("arbitrageOutput");
+    output.textContent = "";
+  
+    const baseToken = document.getElementById("token-exec-select").value.trim();
+    const amountIn = document.getElementById("amountInExec").value.trim();
+  
+    if (!baseToken || !amountIn) {
+      output.textContent = "❌ Please select a token and enter an amount.";
+      return;
+    }
+  
+    if (!web3 || !userAccount) {
+      output.textContent = "❌ Connect wallet first.";
+      return;
+    }
+  
+    try {
+      const selector = web3.utils.sha3("executeArbitrage(address,uint256)").substring(0, 10);
+      const params = web3.eth.abi.encodeParameters(["address", "uint256"], [baseToken, amountIn]).substring(2);
+      const calldata = selector + params;
+  
+      const tx = {
+        from: userAccount,
+        to: arbitrAddress,
+        data: calldata
+      };
+  
+      output.textContent = "🚀 Executing arbitrage...";
+      const receipt = await web3.eth.sendTransaction(tx);
+      output.textContent = `✅ Arbitrage executed. Tx Hash: ${receipt.transactionHash}`;
+    } catch (err) {
+      output.textContent = "❌ Error: " + (err.message || err);
+    }
+  }
+
+  async function readBestPath() {
+    const output = document.getElementById("bestPathOutput");
+    output.textContent = "";
+  
+    if (!web3 || !userAccount) {
+      output.textContent = "❌ Connect wallet first.";
+      return;
+    }
+  
+    try {
+      const selector = web3.utils.sha3("bestPath()").substring(0, 10);
+  
+      const result = await web3.eth.call({
+        to: arbitrAddress,
+        data: selector
+      });
+  
+      const decoded = web3.eth.abi.decodeParameters(
+        ["address", "address", "address", "uint256"],
+        result
+      );
+  
+      const pool1 = decoded[0];
+      const pool2 = decoded[1];
+      const midToken = decoded[2];
+      const expectedOutput = decoded[3];
+  
+      const midTokenName = tokenMap[midToken.toLowerCase()] || "(Unknown token)";
+  
+      output.textContent =
+        `📦 Best Arbitrage Path:\n` +
+        `🔹 Pool 1: ${pool1}\n` +
+        `🔹 Pool 2: ${pool2}\n` +
+        `🔹 Mid Token: ${midToken} (${midTokenName})\n` +
+        `🔹 Expected Output: ${expectedOutput}`;
+    } catch (err) {
+      output.textContent = "❌ Error reading bestPath: " + (err.message || err);
+    }
+  }
   

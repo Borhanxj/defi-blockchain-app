@@ -14,5 +14,9 @@ def amm_page():
 def lending():
     return render_template('lending.html')
 
+@app.route('/arbitraguer')
+def arbitr_page():
+    return render_template('arbitraguer.html')
+
 if __name__ == '__main__':
     app.run(debug=True, port=4455)
