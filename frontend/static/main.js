@@ -4,7 +4,7 @@ let userAccount;
 
 // Contract addresses (update as needed)
 const defiCoreAddress = "0x3A41542c477daE9829D70FA27a5dd5c999FcEd30";
-const lendingCoreAddress = "0x53e88a8CD8195f80CCAA2DEb2ce96E292935F580"; // Replace with actual address
+const lendingCoreAddress = "0x49419A89e61Cf32120614315757BaaF48Cf05847"; // Replace with actual address
 const arbitrAddress = "0xE9CC5564a25c1839720a111589081b9ED36153E9"
 
 // Pools & Tokens in memory
@@ -1110,43 +1110,51 @@ async function addLiquidity() {
     } catch (err) {
       output.textContent = "❌ " + (err.message || err);
     }
-  }
-  async function readLoanForUser() {
+  }async function readLoanForUser() {
     const inputAddress = document.getElementById("loanAddressInput").value.trim();
     const output = document.getElementById("loanOutput");
+    const poolId = document.getElementById("poolAddressLoanPoolIdInput").value.trim();
+  
+    const idx = parseInt(poolId.replace("pool", ""));
+    const poolAddress =  pools[idx]?.address; // Assume pools[idx] directly gives the address
   
     try {
-      if (!web3.utils.isAddress(inputAddress)) {
-        output.textContent = "❌ Invalid address";
+      if (!web3.utils.isAddress(inputAddress) || !web3.utils.isAddress(poolAddress)) {
+        output.textContent = "❌ Invalid user or pool address.";
         return;
       }
   
-      const selector = web3.utils.sha3("loans(address)").substring(0, 10); // First 4 bytes
-      const encodedAddress = web3.eth.abi.encodeParameter("address", inputAddress).substring(2); // Remove '0x'
+      // Get the selector for loans(address,address)
+      const selector = web3.utils.sha3("loans(address,address)").substring(0, 10);
   
-      const calldata = selector + encodedAddress;
+      // Correctly encode the 2 address parameters
+      const encodedParams = web3.eth.abi.encodeParameters(
+        ["address", "address"],
+        [inputAddress, poolAddress]
+      ).substring(2); // remove '0x'
   
+      const calldata = selector + encodedParams;
+  
+      // Call the smart contract view function
       const result = await web3.eth.call({
-        to: lendingCoreAddress, // make sure this is correctly initialized
+        to: lendingCoreAddress,
         data: calldata
       });
   
       console.log("📬 Raw result:", result);
   
-      const decoded = web3.eth.abi.decodeParameters(["uint256", "uint256", "uint8"], result);
-      console.log("Decoded:", decoded);
-
+      // Decode result into Loan struct: (uint256 collateralAmount, uint256 borrowedAmount, uint8 loanType)
+      const decoded = web3.eth.abi.decodeParameters(
+        ["uint256", "uint256", "uint8"],
+        result
+      );
+  
       const collateralAmount = decoded[0];
       const borrowedAmount = decoded[1];
       const loanType = decoded[2];
-
-      console.log("Collateral:", collateralAmount);
-      console.log("Borrowed:", borrowedAmount);
-      console.log("Loan Type:", loanType);
-
   
       output.textContent =
-        `📊 Loan for ${inputAddress}:\n` +
+        `📊 Loan for ${inputAddress} in Pool ${poolId}:\n` +
         `🔹 Collateral Amount: ${collateralAmount}\n` +
         `🔹 Borrowed Amount: ${borrowedAmount}\n` +
         `🔹 Loan Type: ${loanType === "0" ? "Token A" : "Token B"}`;
@@ -1155,6 +1163,7 @@ async function addLiquidity() {
       output.textContent = "❌ " + (err.message || err);
     }
   }
+  
   
 
   async function readShares() {
